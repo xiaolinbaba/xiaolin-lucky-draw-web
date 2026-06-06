@@ -1,0 +1,32 @@
+# Luck — 开源免费在线抽奖系统 / Open-source free online lottery
+
+> Luck is a free, open-source, no-login online lottery (raffle / lucky draw) web app. Import a name list from Excel, configure multiple prize tiers, and run a fair random draw with a 3D animated sphere. All data stays in the browser. Built and published by XIAOLIN AI LAB. Live at https://luck.thus.chat/
+
+## About (English)
+
+Luck is a browser-based lottery and prize draw tool for events such as company annual parties (年会), meetups, classrooms and live shows. It requires no account, no backend and no payment: you open the site, import or type your participants, define the prizes, and draw winners with a fair pseudo-random selection. Participant and prize data is persisted locally in the browser (localStorage / IndexedDB), so nothing is uploaded to a server. The interface is bilingual (Simplified Chinese and English) and fully customizable (themes, colors, background pattern and music).
+
+## 关于 (中文)
+
+Luck 是一款开源、免费、无需注册的在线抽奖系统，适用于公司年会、活动、课堂、直播等场景。无需账号、无需后端、无需付费：打开网站，导入或录入参与人员名单，配置奖项，即可进行公平的随机抽奖。人员与奖项数据全部保存在浏览器本地，不会上传到服务器，隐私安全。界面支持中文 / 英文双语，主题、颜色、背景图案与背景音乐均可自定义。
+
+## Links
+
+- Live app / 在线使用: https://luck.thus.chat/
+- Full description for AI / 完整说明: https://luck.thus.chat/llms-full.txt
+- Usage guide (中文): https://luck.thus.chat/readme-zhCn.md
+- Usage guide (English): https://luck.thus.chat/readme-en.md
+
+## Key features
+
+- Excel name list import and result export (.xlsx / .xls)
+- Multiple configurable prize tiers with per-prize winner counts
+- Fair random draw with a 3D rotating sphere animation
+- Customizable themes, colors, background patterns and background music
+- Local-first and privacy-friendly: all data stored in the browser, no sign-up, no server
+- Bilingual UI: Simplified Chinese and English
+- Free and open-source (MIT License)
+
+## Publisher
+
+XIAOLIN AI LAB — https://luck.thus.chat/

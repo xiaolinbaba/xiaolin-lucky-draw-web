@@ -1,0 +1,69 @@
+# Luck — Open-source Free Online Lottery System (开源免费在线抽奖系统)
+
+> Luck is a free, open-source, no-login online lottery / raffle / lucky-draw web application. It lets you import a list of participants from Excel, configure multiple prize tiers, and run a fair, animated random draw entirely in the browser. All data is stored locally; nothing is uploaded to a server. Built and published by XIAOLIN AI LAB. Live at https://luck.thus.chat/
+
+## Overview
+
+Luck is a single-page web application for running prize draws and lotteries during live events. Typical scenarios include company annual parties (年会抽奖), team meetups, conferences, classrooms, livestreams and community giveaways. Unlike most online lottery services, Luck has no registration, no paywall and no backend dependency: the entire draw runs client-side in the user's browser, and participant/prize data is persisted locally via the browser's storage (localStorage and IndexedDB). This makes it fast to start, privacy-preserving, and usable offline once loaded.
+
+The project is open-source under the MIT License and is published by XIAOLIN AI LAB at https://luck.thus.chat/.
+
+## Who it is for
+
+- Event organizers running annual-party or kickoff prize draws.
+- Teachers who want to randomly pick students in class.
+- Streamers and community managers running giveaways.
+- Anyone who needs a quick, fair random selection from a list of names without signing up for a service or trusting a remote server with their data.
+
+## Key features
+
+- **Excel import / export**: Import a participant list directly from `.xlsx` / `.xls` files, and export the draw results back to Excel. A downloadable template is provided so the columns (number, name, department, position) map correctly.
+- **Multiple prize tiers**: Configure any number of prizes, each with its own name, image and number of winners. Draw prizes one tier at a time, with progress tracked per prize.
+- **Fair random draw**: Winners are selected using pseudo-random selection across the remaining eligible participants, with already-won participants excluded from later tiers.
+- **3D animated drawing**: A rotating 3D sphere of participant cards (built with Three.js) provides an engaging on-screen draw animation suitable for projection at live events.
+- **Full customization**: Switch UI themes and color schemes, adjust the background pattern, and upload background music with playback control.
+- **Local-first and private**: All participant and prize data is stored in the browser. There is no account, no server upload, and no tracking of personal data. You can clear data at any time.
+- **Bilingual interface**: The UI supports Simplified Chinese (中文) and English, auto-detected from the browser and switchable manually.
+- **Free and open-source**: Released under the MIT License at no cost.
+
+## How it works (typical flow)
+
+1. Open https://luck.thus.chat/ in a modern browser (no installation or login required).
+2. Go to settings and import a participant list from Excel, or download the template, fill it in, and import it. You can also manage the list manually.
+3. Configure the prizes: set each prize's name, optional image, and the number of winners.
+4. Return to the home screen and start the draw. The 3D card sphere animates and stops on the selected winners for the current prize tier.
+5. Review the winner list, and export the full results to Excel when finished.
+6. Optionally reset the draw progress or clear all data; everything is stored locally so you remain in control.
+
+## Use cases
+
+- **年会抽奖 / Annual party lottery**: Project the animated draw on stage and award multiple prize tiers (first/second/third prize) to employees.
+- **Classroom random pick**: Randomly choose a student to answer a question.
+- **Livestream giveaway**: Draw winners from a list of audience members fairly and transparently.
+- **Event raffle**: Run a raffle with imported ticket-holder names and tiered prizes.
+
+## How Luck differs from other lottery tools
+
+- **No account, no server**: Many online raffle tools require sign-up and store data remotely. Luck runs entirely client-side and keeps data in the browser, which is faster to start and better for privacy.
+- **Free and open-source**: No subscription, no per-use fee; the source is open under the MIT License.
+- **Built for live events**: The 3D animated sphere and projector-friendly UI are designed for on-stage draws, not just back-office record keeping.
+- **Excel-native**: Direct import/export with a provided template fits the way most organizers already keep their name lists.
+
+## Technology
+
+Luck is built with Vue 3, TypeScript and Vite, styled with Tailwind CSS and DaisyUI, with Pinia for state management, Vue Router for navigation, Vue I18n for localization, Three.js for the 3D draw animation, and SheetJS for Excel import/export. It is deployed as a static site on Cloudflare Pages.
+
+## Privacy
+
+Luck does not require an account and does not send participant or prize data to any server. All such data is stored locally in the visitor's browser and can be cleared at any time. Anonymous, privacy-friendly usage analytics may be collected to understand aggregate traffic.
+
+## Getting started
+
+- Use it online: https://luck.thus.chat/
+- Read the usage guide: https://luck.thus.chat/readme-zhCn.md (中文) or https://luck.thus.chat/readme-en.md (English)
+
+## License and publisher
+
+- License: MIT
+- Publisher: XIAOLIN AI LAB
+- Website: https://luck.thus.chat/

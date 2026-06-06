@@ -1,16 +1,79 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dracula">
+<html lang="zh-CN" data-theme="dracula">
 
 <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Luck</title>
+
+    <!-- Primary SEO -->
+    <title>Luck 开源免费抽奖 · XIAOLIN AI LAB 出品</title>
+    <meta name="description" content="Luck 是一款开源、免费、无需注册的在线抽奖系统，支持 Excel 名单导入导出、多奖项配置、3D 球面动画抽奖、主题与背景音乐自定义。数据全部保存在浏览器本地，隐私安全，适合年会、活动、课堂等场景。由 XIAOLIN AI LAB 出品。" />
+    <meta name="keywords" content="抽奖,开源抽奖,免费抽奖,在线抽奖,年会抽奖,活动抽奖,抽奖软件,抽奖系统,lucky draw,raffle,Luck,XIAOLIN AI LAB" />
+    <meta name="author" content="XIAOLIN AI LAB" />
+    <meta name="application-name" content="Luck" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="theme-color" content="#baa377" />
+    <link rel="canonical" href="https://luck.thus.chat/" />
+    <!-- Markdown alternate for AI / LLM crawlers -->
+    <link rel="alternate" type="text/markdown" href="/llms.txt" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Luck" />
+    <meta property="og:title" content="Luck 开源免费抽奖 · XIAOLIN AI LAB 出品" />
+    <meta property="og:description" content="开源、免费、无需注册的在线抽奖系统，支持 Excel 名单导入、多奖项配置、3D 动画抽奖，数据本地存储、隐私安全。由 XIAOLIN AI LAB 出品。" />
+    <meta property="og:url" content="https://luck.thus.chat/" />
+    <meta property="og:image" content="https://luck.thus.chat/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Luck 开源免费抽奖 · XIAOLIN AI LAB 出品" />
+    <meta property="og:locale" content="zh_CN" />
+    <meta property="og:locale:alternate" content="en_US" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Luck 开源免费抽奖 · XIAOLIN AI LAB 出品" />
+    <meta name="twitter:description" content="开源、免费、无需注册的在线抽奖系统，支持 Excel 名单导入、多奖项配置、3D 动画抽奖，数据本地存储、隐私安全。由 XIAOLIN AI LAB 出品。" />
+    <meta name="twitter:image" content="https://luck.thus.chat/og-image.png" />
+
+    <!-- Structured data (helps Bing / Copilot indexing) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Luck",
+      "alternateName": "Luck 开源免费抽奖",
+      "url": "https://luck.thus.chat/",
+      "description": "开源、免费、无需注册的在线抽奖系统，支持 Excel 名单导入导出、多奖项配置、3D 球面动画抽奖、主题与背景音乐自定义，数据全部保存在浏览器本地。适合年会、活动、课堂等场景。",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web",
+      "browserRequirements": "Requires JavaScript and a modern web browser.",
+      "inLanguage": ["zh-CN", "en"],
+      "isAccessibleForFree": true,
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "license": "https://opensource.org/licenses/MIT",
+      "publisher": {
+        "@type": "Organization",
+        "name": "XIAOLIN AI LAB",
+        "url": "https://luck.thus.chat/"
+      }
+    }
+    </script>
+
     <script defer src="https://umami.thus.chat/script.js" data-website-id="b868a053-979f-434c-848d-eff51741a3c4"></script>
 </head>
 
 <body>
     <div id="app" data-theme="default"></div>
+    <noscript>
+        Luck 是一款开源免费的在线抽奖系统，支持 Excel 名单导入、多奖项配置、3D 动画抽奖、主题与音乐自定义，数据保存在浏览器本地。
+        请启用 JavaScript 后访问 https://luck.thus.chat/ 使用。由 XIAOLIN AI LAB 出品。
+    </noscript>
     <script type="module" src="/src/main.ts"></script>
 </body>
 
