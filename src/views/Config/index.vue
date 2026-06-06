@@ -6,6 +6,9 @@ import { configRoutesChildren } from '../../router'
 const router = useRouter()
 const route = useRoute()
 
+// 动态获取当前年份
+const currentYear = computed(() => new Date().getFullYear())
+
 // 过滤掉重定向路由，只保留有 meta 的菜单项
 const menuList = computed(() => {
   return configRoutesChildren.filter(item => item.meta)
@@ -35,35 +38,12 @@ function skip(path: string) {
     <aside>
       <div class="flex items-center justify-center gap-2">
         <p class="p-0 m-0 text-center">
-          Copyright &copy; 2025-2030.
+          &copy; {{ currentYear }} XIAOLIN AI LAB.
           <a
-            href="https://thus.chat/"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="text-inherit no-underline font-normal"
-          >nabin-cn</a>.
-          <a
-            href="https://jinshuju.com/f/vaSGYu"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="ml-1 text-inherit no-underline font-normal"
-          >意见反馈.</a>
-          <a
-            href="https://donate.nabin.cn/"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="ml-1 text-inherit no-underline font-normal"
-          >赞赏.</a>
-          All Rights Reserved.
+            href="mailto:ceo@thus.chat"
+            class="text-inherit no-underline font-normal not-italic"
+          >EMAIL</a>
         </p>
-        <a
-          href="https://github.com/xiaolinbaba/luck"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="cursor-pointer text-inherit hover:opacity-80 transition-opacity"
-        >
-          <svg-icon name="github" />
-        </a>
       </div>
     </aside>
   </footer>

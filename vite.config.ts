@@ -35,23 +35,23 @@ export default defineConfig(({ mode }) => {
             // 仅在非file模式下启用压缩以减少file模式下的内存占用
             ...(mode === 'file' ? [] : [
                 viteCompression({
-                    verbose: true,
+                    verbose: false,
                     disable: false,
                     threshold: 10240,
                     algorithm: 'gzip',
                     ext: '.gz',
                 })
             ]),
-            // 仅在非file模式下启用visualizer以减少file模式下的内存占用
-            ...(mode === 'file' ? [] : [
+            // 仅在显式开启 ANALYZE 时启用 visualizer，避免分析报告被打包进生产产物
+            ...(mode !== 'file' && process.env.ANALYZE === 'true' ? [
                 visualizer({
-                    emitFile: true, // 是否被触摸
-                    filename: 'test.html', // 生成分析网页文件名
+                    emitFile: true, // 输出到构建产物目录
+                    filename: 'stats.html', // 生成分析网页文件名
                     open: false, // 在默认用户代理中打开生成的文件（构建时关闭，避免崩溃）
                     gzipSize: true, // 从源代码中收集 gzip 大小并将其显示在图表中
                     brotliSize: true, // 从源代码中收集 brotli 大小并将其显示在图表中
                 })
-            ]),
+            ] : []),
             // SVG图标插件始终启用，但对file模式进行优化
             createSvgIconsPlugin({
                 // 指定需要缓存的图标文件夹

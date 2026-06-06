@@ -80,13 +80,14 @@ function exportData() {
   }
   let dataString = JSON.stringify(data)
   dataString = dataString
+    // 先替换复合字段名，避免 name 是 prizeName 的子串导致表头被破坏
+    .replaceAll(/prizeName/g, i18n.global.t('data.prizeName'))
+    .replaceAll(/prizeTime/g, i18n.global.t('data.prizeTime'))
     .replaceAll(/uid/g, i18n.global.t('data.number'))
     .replaceAll(/isWin/g, i18n.global.t('data.isWin'))
     .replaceAll(/department/g, i18n.global.t('data.department'))
     .replaceAll(/name/g, i18n.global.t('data.name'))
     .replaceAll(/identity/g, i18n.global.t('data.identity'))
-    .replaceAll(/prizeName/g, i18n.global.t('data.prizeName'))
-    .replaceAll(/prizeTime/g, i18n.global.t('data.prizeTime'))
 
   data = JSON.parse(dataString)
 
