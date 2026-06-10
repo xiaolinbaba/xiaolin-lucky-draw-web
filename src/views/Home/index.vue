@@ -733,7 +733,7 @@ onUnmounted(() => {
     <div class="flex gap-3">
       <button
         v-if="tableData.length <= 0" class="cursor-pointer btn btn-outline btn-secondary btn-lg"
-        @click="router.push('config')"
+        @click="router.push('/config/person/all')"
       >
         {{ t('button.noInfoAndImport') }}
       </button>
