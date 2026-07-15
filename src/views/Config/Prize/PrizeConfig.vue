@@ -148,123 +148,110 @@ watch(() => prizeList.value, (val: IPrizeConfig[]) => {
 </script>
 
 <template>
-  <div>
-    <div class="flex w-full gap-3 mb-6">
-      <button class="btn btn-info btn-sm" @click="addPrize">
+  <div class="config-page">
+    <div class="config-toolbar">
+      <button class="btn btn-primary btn-sm" @click="addPrize">
         {{ t('button.add') }}
       </button>
-      <button class="btn btn-info btn-sm" @click="resetDefault">
+      <button class="btn btn-warning btn-outline btn-sm" @click="resetDefault">
         {{ t('button.resetDefault') }}
       </button>
-      <button class="btn btn-error btn-sm" @click="delAll">
+      <button class="btn btn-error btn-outline btn-sm" @click="delAll">
         {{ t('button.allDelete') }}
       </button>
+      <span class="ml-auto text-sm text-base-content/60">{{ t('admin.itemCount', { count: prizeList.length }) }}</span>
     </div>
-    <ul class="p-0 m-0">
+
+    <div v-if="prizeList.length === 0" class="config-section config-empty">
+      {{ t('table.noneData') }}
+    </div>
+    <ul v-else class="m-0 grid gap-4 p-0">
       <li
-        v-for="item in prizeList" :key="item.id" class="flex gap-10"
-        :class="currentPrize.id === item.id ? 'border-1 border-dotted rounded-xl' : null"
+        v-for="item in prizeList" :key="item.id" class="config-section"
+        :class="String(currentPrize.id) === String(item.id) ? 'border-primary' : ''"
       >
-        <label class="max-w-xs mb-10 form-control">
-          <!-- 向上向下 -->
-          <div class="flex flex-col items-center gap-2 pt-5">
-            <svg-icon
-              class="cursor-pointer hover:text-blue-400"
-              :class="prizeList.indexOf(item) === 0 ? 'opacity-0 cursor-default' : ''" name="up"
-              @click="sort(item, 1)"
-            />
-            <svg-icon
-              class="cursor-pointer hover:text-blue-400" name="down" :class="prizeList.indexOf(item) === prizeList.length - 1 ? 'opacity-0 cursor-default' : ''"
-              @click="sort(item, 0)"
-            />
-          </div>
-        </label>
-        <label class="w-1/2 max-w-xs mb-10 form-control">
-          <div class="label">
-            <span class="label-text">{{ t('table.prizeName') }}</span>
-          </div>
-          <input
-            v-model="item.name" type="text" :placeholder="t('placeHolder.name')"
-            class="w-full max-w-xs input-sm input input-bordered"
-          >
-        </label>
-        <label class="w-1/2 max-w-xs mb-10 form-control">
-          <div class="label">
-            <span class="label-text">{{ t('table.fullParticipation') }}</span>
-          </div>
-          <input
-            type="checkbox" :checked="item.isAll" class="mt-2 border-solid checkbox checkbox-secondary border-1"
-            @change="item.isAll = !item.isAll"
-          >
-        </label>
-        <label class="w-1/2 max-w-xs mb-10 form-control">
-          <div class="label">
-            <span class="label-text">{{ t('table.numberParticipants') }}</span>
-          </div>
-          <input
-            v-model="item.count" type="number" :placeholder="t('placeHolder.winnerCount')" class="w-full max-w-xs p-0 m-0 input-sm input input-bordered"
-            @change="changePrizePerson(item)"
-          >
-          <div class="tooltip tooltip-bottom" :data-tip="`${t('table.isDone') + item.isUsedCount}/${item.count}`">
-            <progress class="w-full progress" :value="item.isUsedCount" :max="item.count" />
-          </div>
-        </label>
-        <label class="w-1/2 max-w-xs mb-10 form-control">
-          <div class="label">
-            <span class="label-text">{{ t('table.isDone') }}</span>
-          </div>
-          <input
-            type="checkbox" :checked="item.isUsed" class="mt-2 border-solid checkbox checkbox-secondary border-1"
-            @change="changePrizeStatus(item)"
-          >
-        </label>
-        <label class="w-full max-w-xs mb-10 form-control">
-          <div class="label">
-            <span class="label-text">{{ t('table.image') }}</span>
-          </div>
-          <select v-model="item.picture" class="w-full max-w-xs select select-warning select-sm">
-            <option v-if="item.picture.id" :value="{ id: '', name: '', url: '' }">❌</option>
-            <option disabled selected>{{ t('table.selectPicture') }}</option>
-            <option v-for="picItem in localImageList" :key="picItem.id" :value="picItem">{{ picItem.name }}
-            </option>
-          </select>
-        </label>
-        <label v-if="item.separateCount" class="w-full max-w-xs mb-10 form-control">
-          <div class="label">
-            <span class="label-text">{{ t('table.onceNumber') }}</span>
-          </div>
-          <div class="flex justify-start w-full h-full" @click="selectPrize(item)">
-            <ul
-              v-if="item.separateCount.countList.length"
-              class="flex flex-wrap w-full h-full gap-1 p-0 pt-1 m-0 cursor-pointer"
-            >
-              <li
-                v-for="se in item.separateCount.countList"
-                :key="se.id" class="relative flex items-center justify-center w-8 h-8 bg-slate-600/60 separated"
+        <header class="config-section-header">
+          <div class="flex min-w-0 items-center gap-2">
+            <div class="join shrink-0">
+              <button
+                class="btn btn-ghost btn-xs join-item" :disabled="prizeList.indexOf(item) === 0"
+                :aria-label="t('tooltip.edit')" @click="sort(item, 1)"
               >
-                <div
-                  class="flex items-center justify-center w-full h-full tooltip"
-                  :data-tip="`${t('tooltip.doneCount') + se.isUsedCount}/${se.count}`"
-                >
-                  <div
-                    class="absolute left-0 z-50 h-full bg-blue-300/80"
-                    :style="`width:${se.isUsedCount * 100 / se.count}%`"
-                  />
-                  <span>{{ se.count }}</span>
-                </div>
-              </li>
-            </ul>
-            <button v-else class="btn btn-secondary btn-xs">{{ t('button.setting') }}</button>
+                <svg-icon name="up" class="h-4 w-4" />
+              </button>
+              <button
+                class="btn btn-ghost btn-xs join-item" :disabled="prizeList.indexOf(item) === prizeList.length - 1"
+                :aria-label="t('tooltip.edit')" @click="sort(item, 0)"
+              >
+                <svg-icon name="down" class="h-4 w-4" />
+              </button>
+            </div>
+            <strong class="truncate">{{ item.name || t('data.prizeName') }}</strong>
+            <span v-if="String(currentPrize.id) === String(item.id)" class="badge badge-primary badge-sm whitespace-nowrap">
+              {{ t('admin.current') }}
+            </span>
           </div>
-        </label>
-        <label class="w-full max-w-xs mb-10 form-control">
-          <div class="label">
-            <span class="label-text">{{ t('table.operation') }}</span>
+          <button class="btn btn-error btn-ghost btn-xs" @click="delItem(item)">
+            {{ t('button.delete') }}
+          </button>
+        </header>
+
+        <div class="config-section-body config-form-grid">
+          <label class="config-field md:col-span-2">
+            <span class="label"><span class="label-text">{{ t('table.prizeName') }}</span></span>
+            <input v-model="item.name" type="text" :placeholder="t('placeHolder.name')" class="input input-bordered w-full">
+          </label>
+
+          <label class="config-field">
+            <span class="label"><span class="label-text">{{ t('table.numberParticipants') }}</span></span>
+            <input
+              v-model="item.count" type="number" :placeholder="t('placeHolder.winnerCount')" class="input input-bordered w-full"
+              @change="changePrizePerson(item)"
+            >
+            <span class="mt-2 flex items-center gap-3 text-xs text-base-content/60">
+              <progress class="progress progress-primary h-1.5 flex-1" :value="item.isUsedCount" :max="item.count" />
+              <span class="tabular-nums">{{ item.isUsedCount }}/{{ item.count }}</span>
+            </span>
+          </label>
+
+          <label class="config-field">
+            <span class="label"><span class="label-text">{{ t('table.image') }}</span></span>
+            <select v-model="item.picture" class="select select-bordered w-full">
+              <option v-if="item.picture.id" :value="{ id: '', name: '', url: '' }">{{ t('admin.none') }}</option>
+              <option disabled>{{ t('table.selectPicture') }}</option>
+              <option v-for="picItem in localImageList" :key="picItem.id" :value="picItem">{{ picItem.name }}</option>
+            </select>
+          </label>
+
+          <div class="config-field">
+            <span class="label"><span class="label-text">{{ t('table.fullParticipation') }}</span></span>
+            <label class="flex min-h-12 cursor-pointer items-center justify-between rounded-lg border border-base-content/10 px-4">
+              <span class="text-sm text-base-content/65">{{ item.isAll ? t('data.yes') : t('data.no') }}</span>
+              <input type="checkbox" :checked="item.isAll" class="toggle toggle-secondary" @change="item.isAll = !item.isAll">
+            </label>
           </div>
-          <div class="flex gap-2">
-            <button class="btn btn-error btn-sm" @click="delItem(item)">{{ t('button.delete') }}</button>
+
+          <div class="config-field">
+            <span class="label"><span class="label-text">{{ t('table.isDone') }}</span></span>
+            <label class="flex min-h-12 cursor-pointer items-center justify-between rounded-lg border border-base-content/10 px-4">
+              <span class="text-sm text-base-content/65">{{ item.isUsed ? t('data.yes') : t('data.no') }}</span>
+              <input type="checkbox" :checked="item.isUsed" class="toggle toggle-secondary" @change="changePrizeStatus(item)">
+            </label>
           </div>
-        </label>
+
+          <div v-if="item.separateCount" class="config-field md:col-span-2 xl:col-span-1">
+            <span class="label"><span class="label-text">{{ t('table.onceNumber') }}</span></span>
+            <button class="btn min-h-12 h-auto justify-start border-base-content/15 bg-base-100 px-3 py-2 font-normal" @click="selectPrize(item)">
+              <span v-if="item.separateCount.countList.length" class="flex flex-wrap gap-2">
+                <span v-for="se in item.separateCount.countList" :key="se.id" class="badge badge-outline gap-1 whitespace-nowrap">
+                  <strong>{{ se.count }}</strong>
+                  <span class="text-base-content/55">{{ se.isUsedCount }}/{{ se.count }}</span>
+                </span>
+              </span>
+              <span v-else>{{ t('button.setting') }}</span>
+            </button>
+          </div>
+        </div>
       </li>
     </ul>
     <EditSeparateDialog

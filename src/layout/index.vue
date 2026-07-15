@@ -15,13 +15,13 @@ function scrollToTop() {
 </script>
 
 <template>
-  <div class="w-screen">
+  <div class="min-h-[100dvh] w-screen">
     <!-- <header class="shadow-2xl head-container h-14">
       <Header></Header>
     </header> -->
     <ToTop v-if="y > 400" @click="scrollToTop" />
-    <main ref="mainContainer" class="box-content w-screen h-screen overflow-x-hidden overflow-y-auto main-container">
-      <router-view class="h-full main-container-content" />
+    <main ref="mainContainer" class="box-border h-[100dvh] w-screen overflow-x-hidden overflow-y-auto main-container">
+      <router-view class="min-h-full main-container-content" />
     </main>
     <!-- <footer class="w-screen footer-container">
       <Footer></Footer>

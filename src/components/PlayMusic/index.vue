@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import localforage from 'localforage'
 import { storeToRefs } from 'pinia'
-import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import useStore from '@/store'
@@ -9,6 +9,7 @@ import useStore from '@/store'
 const { t } = useI18n()
 const router = useRouter()
 const route = useRoute()
+const isConfigRoute = computed(() => route.path.includes('/config'))
 const audioDbStore = localforage.createInstance({
   name: 'audioStore',
 })
@@ -130,36 +131,43 @@ watch(currentMusic, (val: any) => {
 </script>
 
 <template>
-  <div ref="settingRef" class="flex flex-col gap-3">
-    <div v-if="route.path.includes('/config')" class="tooltip tooltip-left" :data-tip="t('tooltip.toHome')">
-      <div
-        class="flex items-center justify-center w-10 h-10 p-0 m-0 cursor-pointer setting-container bg-slate-500/50 rounded-l-xl hover:bg-slate-500/80 hover:text-blue-400/90"
+  <div
+    ref="settingRef" class="fixed z-30 flex gap-2"
+    :class="isConfigRoute ? 'bottom-20 right-4 flex-row rounded-xl border border-base-content/10 bg-base-100/90 p-1 shadow-lg md:bottom-auto md:top-5' : 'bottom-1/2 right-0 flex-col'"
+  >
+    <div v-if="isConfigRoute" class="tooltip tooltip-top" :data-tip="t('tooltip.toHome')">
+      <button
+        type="button" class="btn btn-square btn-sm rounded-lg bg-base-100"
+        :aria-label="t('tooltip.toHome')"
         @click="enterHome"
       >
         <svg-icon name="home" />
-      </div>
+      </button>
     </div>
     <div v-else class="tooltip tooltip-left" :data-tip="t('tooltip.settingConfiguration')">
-      <div
-        class="flex items-center justify-center w-10 h-10 p-0 m-0 cursor-pointer setting-container bg-slate-500/50 rounded-l-xl hover:bg-slate-500/80 hover:text-blue-400/90"
+      <button
+        type="button" class="btn btn-square btn-sm rounded-r-none border-r-0 bg-base-100 shadow-md"
+        :aria-label="t('tooltip.settingConfiguration')"
         @click="enterConfig"
       >
         <svg-icon name="setting" />
-      </div>
+      </button>
     </div>
 
-    <div class="tooltip tooltip-left" :data-tip="currentMusic.item ? `${currentMusic.item.name}\n\r ${t('tooltip.nextSong')}` : t('tooltip.noSongPlay')">
-      <div
-        class="flex items-center justify-center w-10 h-10 p-0 m-0 cursor-pointer setting-container bg-slate-500/50 rounded-l-xl hover:bg-slate-500/80 hover:text-blue-400/90"
+    <div class="tooltip" :class="isConfigRoute ? 'tooltip-top' : 'tooltip-left'" :data-tip="currentMusic.item ? `${currentMusic.item.name}\n\r ${t('tooltip.nextSong')}` : t('tooltip.noSongPlay')">
+      <button
+        type="button" class="btn btn-square btn-sm bg-base-100" :class="isConfigRoute ? 'rounded-lg' : 'rounded-r-none border-r-0 shadow-md'"
+        :aria-label="currentMusic.paused ? t('button.play') : t('button.pause')"
         @click="playMusic(currentMusic.item)" @click.right.prevent="nextPlay"
       >
         <svg-icon :name="currentMusic.paused ? 'play' : 'pause'" />
-      </div>
+      </button>
     </div>
 
-    <div class="tooltip tooltip-left" :data-tip="isFullscreen ? t('tooltip.exitFullscreen') : t('tooltip.fullscreen')">
-      <div
-        class="flex items-center justify-center w-10 h-10 p-0 m-0 cursor-pointer setting-container bg-slate-500/50 rounded-l-xl hover:bg-slate-500/80 hover:text-blue-400/90"
+    <div class="tooltip" :class="isConfigRoute ? 'tooltip-top' : 'tooltip-left'" :data-tip="isFullscreen ? t('tooltip.exitFullscreen') : t('tooltip.fullscreen')">
+      <button
+        type="button" class="btn btn-square btn-sm bg-base-100" :class="isConfigRoute ? 'rounded-lg' : 'rounded-r-none border-r-0 shadow-md'"
+        :aria-label="isFullscreen ? t('tooltip.exitFullscreen') : t('tooltip.fullscreen')"
         @click="toggleFullscreen"
       >
         <svg v-if="!isFullscreen" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -168,7 +176,7 @@ watch(currentMusic, (val: any) => {
         <svg v-else xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
         </svg>
-      </div>
+      </button>
     </div>
   </div>
 </template>

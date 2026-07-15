@@ -19,7 +19,6 @@ const globalConfig = useStore().globalConfig
 
 const { getMusicList: localMusicList } = storeToRefs(globalConfig)
 const limitType = ref('audio/*')
-const localMusicListValue = ref(localMusicList)
 async function play(item: IMusic) {
   globalConfig.setCurrentMusic(item, false)
 }
@@ -104,7 +103,7 @@ onUnmounted(() => clearTimeout(toastTimer))
 </script>
 
 <template>
-  <div>
+  <div class="config-page">
     <div class="toast toast-top toast-end">
       <div v-if="audioUploadToast === 2" class="alert alert-error">
         <span>{{ t('error.uploadFail') }}</span>
@@ -119,39 +118,48 @@ onUnmounted(() => clearTimeout(toastTimer))
         <span>{{ t('error.fileTooLarge', { size: 50 }) }}</span>
       </div>
     </div>
-    <div class="flex gap-3">
-      <button class="btn btn-primary btn-sm" @click="resetMusic">
+    <div class="config-toolbar">
+      <label for="music-upload" class="btn btn-primary btn-sm cursor-pointer">{{ t('button.upload') }}</label>
+      <input id="music-upload" type="file" class="hidden" :accept="limitType" @change="handleFileChange">
+      <button class="btn btn-warning btn-outline btn-sm" @click="resetMusic">
         {{ t('button.reset') }}
       </button>
-      <label for="explore">
-        <input
-          id="explore" type="file" class="" style="display: none" :accept="limitType"
-          @change="handleFileChange"
-        >
-        <span class="btn btn-primary btn-sm">{{ t('button.upload') }}</span>
-      </label>
-      <button class="btn btn-error btn-sm" @click="deleteAll">
+      <button class="btn btn-error btn-outline btn-sm" @click="deleteAll">
         {{ t('button.allDelete') }}
       </button>
+      <span class="ml-auto text-sm text-base-content/60">{{ t('admin.itemCount', { count: localMusicList.length }) }}</span>
     </div>
-    <div>
-      <ul class="p-0">
-        <li v-for="item in localMusicListValue" :key="item.id" class="flex items-center gap-6 pb-2 mb-3 divide-y">
-          <div class="mr-12 overflow-hidden w-72 whitespace-nowrap text-ellipsis">
-            <span>
-              {{ item.name }}</span>
+
+    <section class="config-section">
+      <header class="config-section-header">
+        <h2 class="config-section-title">
+          {{ t('admin.section.list') }}
+        </h2>
+      </header>
+      <div v-if="localMusicList.length === 0" class="config-empty">
+        {{ t('table.noneData') }}
+      </div>
+      <ul v-else class="m-0 p-0">
+        <li v-for="item in localMusicList" :key="item.id" class="config-list-row">
+          <div class="min-w-0">
+            <p class="m-0 truncate font-medium" :title="item.name">
+              {{ item.name }}
+            </p>
+            <p class="mb-0 mt-1 text-xs text-base-content/50">
+              {{ item.url === 'Storage' ? t('admin.localFile') : t('admin.remoteFile') }}
+            </p>
           </div>
-          <div class="flex gap-3">
-            <button class="btn btn-primary btn-xs" @click="play(item)">
+          <div class="flex shrink-0 gap-2 self-end sm:self-auto">
+            <button class="btn btn-primary btn-outline btn-xs" @click="play(item)">
               {{ t('button.play') }}
             </button>
-            <button class="btn btn-error btn-xs" @click="deleteMusic(item)">
+            <button class="btn btn-error btn-outline btn-xs" @click="deleteMusic(item)">
               {{ t('button.delete') }}
             </button>
           </div>
         </li>
       </ul>
-    </div>
+    </section>
   </div>
 </template>
 

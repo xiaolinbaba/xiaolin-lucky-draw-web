@@ -2,7 +2,7 @@
 <script setup lang='ts'>
 import type { IPersonConfig } from '@/types/storeType'
 import { storeToRefs } from 'pinia'
-import { onMounted, ref } from 'vue'
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import * as XLSX from 'xlsx'
 import DaiysuiTable from '@/components/DaiysuiTable/index.vue'
@@ -223,96 +223,90 @@ const tableColumns = [
     ],
   },
 ]
-onMounted(() => {
-})
 </script>
 
 <template>
-  <dialog id="my_modal_1" ref="resetDataDialog" class="border-none modal">
-    <div class="modal-box">
-      <h3 class="text-lg font-bold">
-        {{ t('dialog.titleTip') }}
-      </h3>
-      <p class="py-4">
-        {{ t('dialog.dialogResetWinner') }}
-      </p>
-      <div class="modal-action">
-        <form method="dialog" class="flex gap-3">
-          <!-- if there is a button in form, it will close the modal -->
-          <button class="btn" @click="resetDataDialog.close()">
-            {{ t('button.cancel') }}
-          </button>
-          <button class="btn" @click="resetData">
-            {{ t('button.confirm') }}
-          </button>
-        </form>
+  <div class="config-page">
+    <dialog ref="resetDataDialog" class="border-none modal">
+      <div class="modal-box">
+        <h3 class="text-lg font-bold">
+          {{ t('dialog.titleTip') }}
+        </h3>
+        <p class="py-4">
+          {{ t('dialog.dialogResetWinner') }}
+        </p>
+        <div class="modal-action">
+          <form method="dialog" class="flex gap-3">
+            <button class="btn btn-ghost" @click="resetDataDialog.close()">
+              {{ t('button.cancel') }}
+            </button>
+            <button class="btn btn-warning" @click="resetData">
+              {{ t('button.confirm') }}
+            </button>
+          </form>
+        </div>
       </div>
-    </div>
-  </dialog>
-  <dialog id="my_modal_1" ref="delAllDataDialog" class="border-none modal">
-    <div class="modal-box">
-      <h3 class="text-lg font-bold">
-        {{ t('dialog.titleTip') }}
-      </h3>
-      <p class="py-4">
-        {{ t('dialog.dialogDelAllPerson') }}
-      </p>
-      <div class="modal-action">
-        <form method="dialog" class="flex gap-3">
-          <!-- if there is a button in form, it will close the modal -->
-          <button class="btn" @click="delAllDataDialog.close()">
-            {{ t('button.cancel') }}
-          </button>
-          <button class="btn" @click="deleteAll">
-            {{ t('button.confirm') }}
-          </button>
-        </form>
+    </dialog>
+
+    <dialog ref="delAllDataDialog" class="border-none modal">
+      <div class="modal-box">
+        <h3 class="text-lg font-bold">
+          {{ t('dialog.titleTip') }}
+        </h3>
+        <p class="py-4">
+          {{ t('dialog.dialogDelAllPerson') }}
+        </p>
+        <div class="modal-action">
+          <form method="dialog" class="flex gap-3">
+            <button class="btn btn-ghost" @click="delAllDataDialog.close()">
+              {{ t('button.cancel') }}
+            </button>
+            <button class="btn btn-error" @click="deleteAll">
+              {{ t('button.confirm') }}
+            </button>
+          </form>
+        </div>
       </div>
-    </div>
-  </dialog>
-  <div class="min-w-1000px mt-6">
-    <div class="flex gap-3">
-      <button class="btn btn-error btn-sm" @click="delAllDataDialog.showModal()">
-        {{ t('button.allDelete') }}
-      </button>
-      <div class="tooltip tooltip-bottom" :data-tip="t('tooltip.downloadTemplateTip')">
-        <button
-          class="btn btn-secondary btn-sm"
-          @click="downloadTemplate"
-        >
+    </dialog>
+
+    <div class="config-toolbar">
+      <span class="tooltip tooltip-bottom" :data-tip="t('tooltip.uploadExcelTip')">
+        <label for="person-import" class="btn btn-primary btn-sm cursor-pointer">
+          {{ t('button.importData') }}
+        </label>
+      </span>
+      <input id="person-import" type="file" class="hidden" :accept="limitType" @change="handleFileChange">
+
+      <span class="tooltip tooltip-bottom" :data-tip="t('tooltip.downloadTemplateTip')">
+        <button class="btn btn-secondary btn-outline btn-sm" @click="downloadTemplate">
           {{ t('button.downloadTemplate') }}
         </button>
-      </div>
-      <div class="">
-        <label for="explore">
-
-          <div class="tooltip tooltip-bottom" :data-tip="t('tooltip.uploadExcelTip')">
-            <input
-              id="explore" type="file" class="" style="display: none" :accept="limitType"
-              @change="handleFileChange"
-            >
-
-            <span class="btn btn-primary btn-sm">{{ t('button.importData') }}</span>
-          </div>
-        </label>
-      </div>
-      <button class="btn btn-error btn-sm" @click="resetDataDialog.showModal()">
-        {{ t('button.resetData') }}
-      </button>
-      <button class="btn btn-accent btn-sm" @click="exportData">
+      </span>
+      <button class="btn btn-accent btn-outline btn-sm" @click="exportData">
         {{ t('button.exportResult') }}
       </button>
-      <div>
-        <span>{{ t('table.luckyPeopleNumber') }}:</span>
-        <span>{{ alreadyPersonList.length }}</span>
-        <span>&nbsp;/&nbsp;</span>
-        <span>{{ allPersonList.length }}</span>
-      </div>
-      <div v-if="importError" role="alert" class="alert alert-error py-2">
-        {{ importError }}
+
+      <div class="hidden h-6 w-px bg-base-content/10 sm:block" />
+      <button class="btn btn-warning btn-outline btn-sm" @click="resetDataDialog.showModal()">
+        {{ t('button.resetData') }}
+      </button>
+      <button class="btn btn-error btn-outline btn-sm" @click="delAllDataDialog.showModal()">
+        {{ t('button.allDelete') }}
+      </button>
+
+      <div class="ml-auto rounded-lg bg-base-100 px-3 py-2 text-sm shadow-sm">
+        <span class="text-base-content/60">{{ t('table.luckyPeopleNumber') }}</span>
+        <strong class="ml-2 tabular-nums">{{ alreadyPersonList.length }} / {{ allPersonList.length }}</strong>
       </div>
     </div>
-    <DaiysuiTable :table-columns="tableColumns" :data="allPersonList" />
+
+    <div v-if="importError" role="alert" class="alert alert-error text-sm">
+      {{ importError }}
+    </div>
+
+    <section class="config-section">
+      <DaiysuiTable :table-columns="tableColumns" :data="allPersonList" />
+    </section>
   </div>
 </template>
 

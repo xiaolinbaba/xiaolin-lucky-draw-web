@@ -1,25 +1,30 @@
 <script setup lang='ts'>
 import markdownit from 'markdown-it'
 import { onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import i18n from '@/locales/i18n'
 
 const md = markdownit()
+const { t } = useI18n()
 const readmeHtml = ref('')
-function readMd() {
-  fetch(`/${i18n.global.t('data.readmeName')}`)
-    .then((res) => {
-      if (!res.ok) {
-        throw new Error(`Unable to load README: ${res.status}`)
-      }
-      return res.text()
-    })
-    .then((res) => {
-      readmeHtml.value = md.render(res)
-    })
-    .catch((error) => {
-      console.error('Failed to load README', error)
-      readmeHtml.value = ''
-    })
+const isLoading = ref(true)
+const readmeError = ref('')
+
+async function readMd() {
+  try {
+    const response = await fetch(`/${i18n.global.t('data.readmeName')}`)
+    if (!response.ok) {
+      throw new Error(`Unable to load README: ${response.status}`)
+    }
+    readmeHtml.value = md.render(await response.text())
+  }
+  catch (error) {
+    console.error('Failed to load README', error)
+    readmeError.value = t('error.readmeLoadFailed')
+  }
+  finally {
+    isLoading.value = false
+  }
 }
 
 onMounted(() => {
@@ -28,8 +33,21 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="w-3/4 mb-10 ml-3">
-    <div v-dompurify-html="readmeHtml" class="markdown-body" />
+  <div class="config-page">
+    <section class="config-section">
+      <div v-if="isLoading" class="config-section-body space-y-4" aria-busy="true">
+        <div class="skeleton h-8 w-2/5" />
+        <div class="skeleton h-4 w-full" />
+        <div class="skeleton h-4 w-5/6" />
+        <div class="skeleton h-40 w-full" />
+      </div>
+      <div v-else-if="readmeError" role="alert" class="config-empty text-error">
+        {{ readmeError }}
+      </div>
+      <div v-else class="config-section-body">
+        <div v-dompurify-html="readmeHtml" class="admin-readme markdown-body mx-auto max-w-4xl" />
+      </div>
+    </section>
   </div>
 </template>
 
@@ -64,5 +82,11 @@ html[data-theme="dracula"] .markdown-body a {
 html[data-theme="dracula"] .markdown-body code {
   color: #e6edf3 !important;
   background-color: rgba(110, 118, 129, 0.4) !important;
+}
+
+.admin-readme.markdown-body {
+  width: 100%;
+  color: inherit;
+  background: transparent;
 }
 </style>

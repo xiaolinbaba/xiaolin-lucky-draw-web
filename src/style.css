@@ -2,6 +2,59 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+    .config-shell,
+    .config-shell *,
+    .config-shell *::before,
+    .config-shell *::after {
+        box-sizing: border-box;
+    }
+
+    .config-page {
+        @apply flex min-w-0 flex-col gap-6;
+    }
+
+    .config-toolbar {
+        @apply flex flex-wrap items-center gap-2 rounded-xl border border-base-content/10 bg-base-200/50 p-3 sm:p-4;
+    }
+
+    .config-section {
+        @apply overflow-hidden rounded-xl border border-base-content/10 bg-base-100;
+    }
+
+    .config-section-header {
+        @apply flex flex-wrap items-center justify-between gap-3 border-b border-base-content/10 bg-base-200/30 px-4 py-3 sm:px-5;
+    }
+
+    .config-section-title {
+        @apply m-0 text-base font-semibold;
+    }
+
+    .config-section-body {
+        @apply p-4 sm:p-5;
+    }
+
+    .config-form-grid {
+        @apply grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2 xl:grid-cols-3;
+    }
+
+    .config-field {
+        @apply form-control min-w-0 w-full;
+    }
+
+    .config-field > .label {
+        @apply min-h-8 px-0 py-1;
+    }
+
+    .config-list-row {
+        @apply flex flex-col gap-3 border-b border-base-content/10 px-4 py-4 last:border-b-0 sm:flex-row sm:items-center sm:justify-between sm:px-5;
+    }
+
+    .config-empty {
+        @apply flex min-h-40 items-center justify-center px-4 py-10 text-center text-sm text-base-content/55;
+    }
+}
+
 body,
 html {
     margin: 0;

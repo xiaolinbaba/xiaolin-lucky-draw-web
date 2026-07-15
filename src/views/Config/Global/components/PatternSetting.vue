@@ -26,7 +26,7 @@ const data = computed(() => {
   return props
 })
 
-function updatePatternList(event: Event, item: number) {
+function updatePatternList(item: number) {
   const nextPatternList = [...data.value.patternList] as number[]
   if (nextPatternList.includes(item)) {
     const index = nextPatternList.indexOf(item)
@@ -42,7 +42,13 @@ function updatePatternList(event: Event, item: number) {
 <template>
   <div class="w-full h-auto">
     <ul class="pattern-list" :style="{ gridTemplateColumns: `repeat(${data.rowCount},1fr)` }">
-      <li v-for="item in data.rowCount * 7" :key="item" class="w-5 h-5" :style="{ backgroundColor: data.patternList.includes(item) ? data.patternColor : data.cardColor }" @click.stop="(event) => updatePatternList(event, item)" />
+      <li v-for="item in data.rowCount * 7" :key="item" class="h-5 w-5">
+        <button
+          type="button" class="block h-full w-full rounded-sm transition-transform active:scale-90"
+          :style="{ backgroundColor: data.patternList.includes(item) ? data.patternColor : data.cardColor }"
+          :aria-pressed="data.patternList.includes(item)" @click.stop="updatePatternList(item)"
+        />
+      </li>
     </ul>
   </div>
 </template>
@@ -53,10 +59,12 @@ function updatePatternList(event: Event, item: number) {
         padding: 0;
         display:grid;
         grid-template-rows:repeat(7,1fr);
-        grid-gap:1px;
-        border:1px solid #000;
-        li{
-            cursor:pointer;
-        }
+        gap:2px;
+        width:max-content;
+        min-width:100%;
+        border:1px solid hsl(var(--bc) / 0.14);
+        border-radius:0.5rem;
+        background:hsl(var(--b2));
+        padding:0.5rem;
     }
 </style>

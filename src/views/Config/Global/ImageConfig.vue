@@ -90,53 +90,53 @@ onUnmounted(() => clearTimeout(toastTimer))
 </script>
 
 <template>
-  <div class="toast toast-top toast-end">
-    <div v-if="imgUploadToast === 2" class="alert alert-error">
-      <span>{{ t('error.uploadFail') }}</span>
+  <div class="config-page">
+    <div class="toast toast-top toast-end">
+      <div v-if="imgUploadToast === 2" class="alert alert-error">
+        <span>{{ t('error.uploadFail') }}</span>
+      </div>
+      <div v-if="imgUploadToast === 1" class="alert alert-success">
+        <span>{{ t('error.uploadSuccess') }}</span>
+      </div>
+      <div v-if="imgUploadToast === 3" class="alert alert-error">
+        <span>{{ t('error.notImage') }}</span>
+      </div>
+      <div v-if="imgUploadToast === 4" class="alert alert-error">
+        <span>{{ t('error.fileTooLarge', { size: 10 }) }}</span>
+      </div>
     </div>
-    <div v-if="imgUploadToast === 1" class="alert alert-success">
-      <span>{{ t('error.uploadSuccess') }}</span>
-    </div>
-    <div v-if="imgUploadToast === 3" class="alert alert-error">
-      <span>{{ t('error.notImage') }}</span>
-    </div>
-    <div v-if="imgUploadToast === 4" class="alert alert-error">
-      <span>{{ t('error.fileTooLarge', { size: 10 }) }}</span>
-    </div>
-  </div>
 
-  <div class="p-6">
-    <div class="">
-      <label for="explore">
-        <input
-          id="explore" type="file" class="" style="display: none" :accept="limitType"
-          @change="handleFileChange"
-        >
-        <span class="btn btn-primary btn-sm">{{ t('button.upload') }}</span>
-      </label>
+    <div class="config-toolbar">
+      <label for="image-upload" class="btn btn-primary btn-sm cursor-pointer">{{ t('button.upload') }}</label>
+      <input id="image-upload" type="file" class="hidden" :accept="limitType" @change="handleFileChange">
+      <span class="ml-auto text-sm text-base-content/60">{{ t('admin.itemCount', { count: localImageList.length }) }}</span>
     </div>
-    <ul class="p-0">
-      <li v-for="item in localImageList" :key="item.id" class="mb-3">
-        <div class="flex items-center gap-8">
-          <div class="avatar h-14">
-            <div class="w-12 h-12 mask mask-squircle hover:w-14 hover:h-14">
-              <!-- <img v-if="item.url!=='Storage'" :src="item.url" alt="Avatar Tailwind CSS Component" /> -->
-              <ImageSync :img-item="item" />
+
+    <section class="config-section">
+      <header class="config-section-header">
+        <h2 class="config-section-title">
+          {{ t('admin.section.list') }}
+        </h2>
+      </header>
+      <div v-if="localImageList.length === 0" class="config-empty">
+        {{ t('table.noneData') }}
+      </div>
+      <ul v-else class="m-0 p-0">
+        <li v-for="item in localImageList" :key="item.id" class="config-list-row">
+          <div class="flex min-w-0 items-center gap-4">
+            <div class="avatar shrink-0">
+              <div class="h-12 w-12 rounded-lg bg-base-200">
+                <ImageSync :img-item="item" />
+              </div>
             </div>
+            <span class="truncate font-medium" :title="item.name">{{ item.name }}</span>
           </div>
-          <div class="w-64">
-            <div class="overflow-hidden font-bold whitespace-nowrap text-ellipsis">
-              {{ item.name }}
-            </div>
-          </div>
-          <div>
-            <button class="btn btn-error btn-xs" @click="removeImage(item)">
-              {{ t('button.delete') }}
-            </button>
-          </div>
-        </div>
-      </li>
-    </ul>
+          <button class="btn btn-error btn-outline btn-xs self-end sm:self-auto" @click="removeImage(item)">
+            {{ t('button.delete') }}
+          </button>
+        </li>
+      </ul>
+    </section>
   </div>
 </template>
 

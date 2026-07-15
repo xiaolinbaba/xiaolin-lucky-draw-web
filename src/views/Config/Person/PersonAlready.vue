@@ -62,14 +62,16 @@ const tableColumnsList = [
 </script>
 
 <template>
-  <div class="overflow-y-auto">
-    <div class="flex items-center justify-start gap-10">
-      <div>
-        <span>{{ t('table.luckyPeopleNumber') }}：</span>
-        <span>{{ alreadyPersonList.length }}</span>
+  <div class="config-page">
+    <div class="config-toolbar">
+      <div class="rounded-lg bg-base-100 px-3 py-2 text-sm shadow-sm">
+        <span class="text-base-content/60">{{ t('table.luckyPeopleNumber') }}</span>
+        <strong class="ml-2 tabular-nums">{{ alreadyPersonList.length }}</strong>
       </div>
     </div>
-    <DaiysuiTable :table-columns="tableColumnsList" :data="alreadyPersonList" />
+    <section class="config-section">
+      <DaiysuiTable :table-columns="tableColumnsList" :data="alreadyPersonList" />
+    </section>
   </div>
 </template>
 

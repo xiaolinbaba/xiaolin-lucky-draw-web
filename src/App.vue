@@ -80,7 +80,7 @@ onMounted(() => {
     </div>
   </dialog>
   <router-view />
-  <PlayMusic class="absolute right-0 bottom-1/2" />
+  <PlayMusic />
 </template>
 
 <style scoped lang="scss"></style>

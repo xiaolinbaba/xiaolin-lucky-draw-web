@@ -3,7 +3,7 @@ import daisyuiThemes from 'daisyui/src/theming/themes'
 
 import localforage from 'localforage'
 import { storeToRefs } from 'pinia'
-import { onMounted, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { ColorPicker } from 'vue3-colorpicker'
 import { useI18n } from 'vue-i18n'
 import zod from 'zod'
@@ -21,7 +21,6 @@ const prizeConfig = useStore().prizeConfig
 const { getTopTitle: topTitle, getTheme: localTheme, getPatterColor: patternColor, getPatternList: patternList, getCardColor: cardColor, getLuckyColor: luckyCardColor, getTextColor: textColor, getCardSize: cardSize, getTextSize: textSize, getRowCount: rowCount, getIsShowPrizeList: isShowPrizeList, getLanguage: userLanguage, getBackground: backgroundImage, getImageList: imageList,
 } = storeToRefs(globalConfig)
 const { getAlreadyPersonList: alreadyPersonList, getNotPersonList: notPersonList } = storeToRefs(personConfig)
-const colorPickerRef = ref()
 const resetDataDialogRef = ref()
 interface ThemeDaType {
   [key: string]: any
@@ -71,6 +70,7 @@ function resetPersonLayout() {
     const alreadyLen = alreadyPersonList.value.length
     const notLen = notPersonList.value.length
     if (alreadyLen <= 0 && notLen <= 0) {
+      isRowCountChange.value = 0
       return
     }
     const allPersonList = alreadyPersonList.value.concat(notPersonList.value)
@@ -119,6 +119,7 @@ watch(() => formData.value.rowCount, () => {
   payload.rowCount = formData.value.rowCount
   parseSchema(payload).then((res) => {
     if (res.rowCount) {
+      formErr.value.rowCount = ''
       isRowCountChange.value = 1
       globalConfig.setRowCount(res.rowCount)
     }
@@ -165,194 +166,159 @@ watch(backgroundImageValue, (val) => {
 watch(languageValue, (val: string) => {
   globalConfig.setLanguage(val)
 })
-onMounted(() => {
-})
 </script>
 
 <template>
-  <dialog id="my_modal_1" ref="resetDataDialogRef" class="border-none modal">
-    <div class="modal-box">
-      <h3 class="text-lg font-bold">
-        {{ t('dialog.titleTip') }}
-      </h3>
-      <p class="py-4">
-        {{ t('dialog.dialogResetAllData') }}
-      </p>
-      <div class="modal-action">
-        <form method="dialog" class="flex gap-3">
-          <!-- if there is a button in form, it will close the modal -->
-          <button class="btn" @click="resetDataDialogRef.close()">
-            {{ t(`button.cancel`) }}
-          </button>
-          <button class="btn" @click="resetData">
-            {{ t('button.confirm') }}
-          </button>
-        </form>
+  <div class="config-page">
+    <dialog ref="resetDataDialogRef" class="border-none modal">
+      <div class="modal-box">
+        <h3 class="text-lg font-bold">
+          {{ t('dialog.titleTip') }}
+        </h3>
+        <p class="py-4">
+          {{ t('dialog.dialogResetAllData') }}
+        </p>
+        <div class="modal-action">
+          <form method="dialog" class="flex gap-3">
+            <button class="btn btn-ghost" @click="resetDataDialogRef.close()">
+              {{ t('button.cancel') }}
+            </button>
+            <button class="btn btn-error" @click="resetData">
+              {{ t('button.confirm') }}
+            </button>
+          </form>
+        </div>
       </div>
-    </div>
-  </dialog>
-  <div class="mt-6">
-    <div class="mb-8">
-      <button class="btn btn-sm btn-primary" @click="resetDataDialogRef.showModal()">
+    </dialog>
+
+    <div class="config-toolbar justify-end">
+      <button class="btn btn-error btn-outline btn-sm" @click="resetDataDialogRef.showModal()">
         {{ t('button.resetAllData') }}
       </button>
     </div>
-    <label class="flex flex-row items-center w-full gap-24 mb-10 form-control">
-      <div class="">
-        <div class="label">
-          <span class="label-text">{{ t('table.title') }}</span>
-        </div>
-        <input
-          v-model="topTitleValue" type="text" :placeholder="t('placeHolder.enterTitle')"
-          class="w-full max-w-xs input input-bordered"
-        >
+
+    <section class="config-section">
+      <header class="config-section-header">
+        <h2 class="config-section-title">
+          {{ t('admin.section.basicSettings') }}
+        </h2>
+      </header>
+      <div class="config-section-body config-form-grid">
+        <label class="config-field">
+          <span class="label"><span class="label-text">{{ t('table.title') }}</span></span>
+          <input v-model="topTitleValue" type="text" :placeholder="t('placeHolder.enterTitle')" class="input input-bordered w-full">
+        </label>
+
+        <label class="config-field">
+          <span class="label"><span class="label-text">{{ t('table.columnNumber') }}</span></span>
+          <div class="flex items-center gap-2">
+            <input v-model="formData.rowCount" type="number" class="input input-bordered min-w-0 flex-1">
+            <span class="tooltip" :data-tip="t('tooltip.resetLayout')">
+              <button class="btn btn-primary btn-sm whitespace-nowrap" :disabled="isRowCountChange !== 1" @click.prevent="resetPersonLayout">
+                <span>{{ t('button.setLayout') }}</span>
+                <span v-show="isRowCountChange === 2" class="loading loading-ring loading-sm" />
+              </button>
+            </span>
+          </div>
+          <span v-if="formErr.rowCount" class="mt-1 text-sm text-error">{{ formErr.rowCount }}</span>
+        </label>
+
+        <label class="config-field">
+          <span class="label"><span class="label-text">{{ t('table.language') }}</span></span>
+          <select v-model="languageValue" data-choose-theme class="select select-bordered w-full">
+            <option v-for="item in languageList" :key="item.key" :value="item.key">{{ item.name }}</option>
+          </select>
+        </label>
+
+        <label class="config-field">
+          <span class="label"><span class="label-text">{{ t('table.theme') }}</span></span>
+          <select v-model="themeValue" data-choose-theme class="select select-bordered w-full">
+            <option v-for="item in themeList" :key="item" :value="item">{{ item }}</option>
+          </select>
+        </label>
+
+        <label class="config-field md:col-span-2">
+          <span class="label"><span class="label-text">{{ t('table.backgroundImage') }}</span></span>
+          <select v-model="backgroundImageValue" data-choose-theme class="select select-bordered w-full">
+            <option v-for="item in [{ name: t('admin.none'), url: '', id: '' }, ...imageList]" :key="item.id" :value="item">
+              {{ item.name }}
+            </option>
+          </select>
+        </label>
       </div>
-    </label>
-    <label class="flex flex-row items-center w-full gap-24 mb-10 form-control">
-      <div class="">
-        <div class="label">
-          <span class="label-text">{{ t('table.columnNumber') }}</span>
-        </div>
-        <input
-          v-model="formData.rowCount" type="number" placeholder="Type here"
-          class="w-full max-w-xs input input-bordered"
-        >
-        <div class="help">
-          <span v-if="formErr.rowCount" class="text-sm text-red-400 help-text">
-            {{ formErr.rowCount }}
+    </section>
+
+    <section class="config-section">
+      <header class="config-section-header">
+        <h2 class="config-section-title">
+          {{ t('admin.section.visualSettings') }}
+        </h2>
+      </header>
+      <div class="config-section-body config-form-grid">
+        <label class="config-field">
+          <span class="label"><span class="label-text">{{ t('table.cardColor') }}</span></span>
+          <ColorPicker v-model="cardColorValue" v-model:pure-color="cardColorValue" />
+        </label>
+        <label class="config-field">
+          <span class="label"><span class="label-text">{{ t('table.winnerColor') }}</span></span>
+          <ColorPicker v-model="luckyCardColorValue" v-model:pure-color="luckyCardColorValue" />
+        </label>
+        <label class="config-field">
+          <span class="label"><span class="label-text">{{ t('table.textColor') }}</span></span>
+          <ColorPicker v-model="textColorValue" v-model:pure-color="textColorValue" />
+        </label>
+        <label class="config-field">
+          <span class="label"><span class="label-text">{{ t('table.cardWidth') }}</span></span>
+          <input v-model="cardSizeValue.width" type="number" class="input input-bordered w-full">
+        </label>
+        <label class="config-field">
+          <span class="label"><span class="label-text">{{ t('table.cardHeight') }}</span></span>
+          <input v-model="cardSizeValue.height" type="number" class="input input-bordered w-full">
+        </label>
+        <label class="config-field">
+          <span class="label"><span class="label-text">{{ t('table.textSize') }}</span></span>
+          <input v-model="textSizeValue" type="number" class="input input-bordered w-full">
+        </label>
+      </div>
+    </section>
+
+    <section class="config-section">
+      <header class="config-section-header">
+        <h2 class="config-section-title">
+          {{ t('admin.section.patternSettings') }}
+        </h2>
+        <div class="flex flex-wrap gap-2">
+          <button class="btn btn-ghost btn-sm" @click.stop="clearPattern">
+            {{ t('button.clearPattern') }}
+          </button>
+          <span class="tooltip" :data-tip="t('tooltip.defaultLayout')">
+            <button class="btn btn-secondary btn-sm" @click="resetPattern">{{ t('button.DefaultPattern') }}</button>
           </span>
         </div>
-      </div>
-      <div>
-        <div class="tooltip" :data-tip="t('tooltip.resetLayout')">
-          <button class="mt-5 btn btn-info btn-sm" :disabled="isRowCountChange !== 1" @click="resetPersonLayout">
-            <span>{{ t('button.setLayout') }}</span>
-            <span v-show="isRowCountChange === 2" class="loading loading-ring loading-md" />
-          </button>
+      </header>
+      <div class="config-section-body space-y-5">
+        <label class="config-field max-w-xs">
+          <span class="label"><span class="label-text">{{ t('table.highlightColor') }}</span></span>
+          <ColorPicker v-model="patternColorValue" v-model:pure-color="patternColorValue" />
+        </label>
+        <div class="overflow-x-auto rounded-lg bg-base-200/50 p-3">
+          <div class="w-max min-w-full">
+            <PatternSetting
+              :row-count="rowCount" :card-color="cardColor" :pattern-color="patternColor"
+              :pattern-list="patternList"
+              @update:pattern-list="globalConfig.setPatternList"
+            />
+          </div>
         </div>
+        <label class="flex cursor-pointer items-center justify-between gap-4 rounded-lg border border-base-content/10 px-4 py-3">
+          <span class="font-medium">{{ t('table.alwaysDisplay') }}</span>
+          <input
+            type="checkbox" :checked="isShowPrizeListValue" class="checkbox checkbox-secondary"
+            @change="isShowPrizeListValue = !isShowPrizeListValue"
+          >
+        </label>
       </div>
-    </label>
-    <label class="w-full max-w-xs form-control">
-      <div class="label">
-        <span class="label-text">{{ t('table.language') }}</span>
-      </div>
-      <select v-model="languageValue" data-choose-theme class="w-full max-w-xs border-solid select border-1">
-        <option disabled selected>{{ t('table.language') }}</option>
-        <option v-for="item in languageList" :key="item.key" :value="item.key">{{ item.name }}</option>
-      </select>
-    </label>
-    <label class="w-full max-w-xs form-control">
-      <div class="label">
-        <span class="label-text">{{ t('table.theme') }}</span>
-      </div>
-      <select v-model="themeValue" data-choose-theme class="w-full max-w-xs border-solid select border-1">
-        <option disabled selected>{{ t('table.theme') }}</option>
-        <option v-for="(item, index) in themeList" :key="index" :value="item">{{ item }}</option>
-      </select>
-    </label>
-    <label class="w-full max-w-xs form-control">
-      <div class="label">
-        <span class="label-text">{{ t('table.backgroundImage') }}</span>
-      </div>
-      <select
-        v-model="backgroundImageValue" data-choose-theme
-        class="w-full max-w-xs border-solid select border-1"
-      >
-        <option disabled selected>{{ t('table.backgroundImage') }}</option>
-        <option
-          v-for="(item, index) in [{ name: '❌', url: '', id: '' }, ...imageList]" :key="index"
-          :value="item"
-        >{{ item.name }}</option>
-      </select>
-    </label>
-    <label class="w-full max-w-xs form-control">
-      <div class="label">
-        <span class="label-text">{{ t('table.cardColor') }}</span>
-      </div>
-      <ColorPicker ref="colorPickerRef" v-model="cardColorValue" v-model:pure-color="cardColorValue" />
-    </label>
-    <label class="w-full max-w-xs form-control">
-      <div class="label">
-        <span class="label-text">{{ t('table.winnerColor') }}</span>
-      </div>
-      <ColorPicker ref="colorPickerRef" v-model="luckyCardColorValue" v-model:pure-color="luckyCardColorValue" />
-    </label>
-
-    <label class="w-full max-w-xs form-control">
-      <div class="label">
-        <span class="label-text">{{ t('table.textColor') }}</span>
-      </div>
-      <ColorPicker ref="colorPickerRef" v-model="textColorValue" v-model:pure-color="textColorValue" />
-    </label>
-    <label class="flex flex-row w-full max-w-xs gap-10 mb-10 form-control">
-      <div>
-        <div class="label">
-          <span class="label-text">{{ t('table.cardWidth') }}</span>
-        </div>
-        <input
-          v-model="cardSizeValue.width" type="number" placeholder="Type here"
-          class="w-full max-w-xs input input-bordered"
-        >
-      </div>
-      <div>
-        <div class="label">
-          <span class="label-text">{{ t('table.cardHeight') }}</span>
-        </div>
-        <input
-          v-model="cardSizeValue.height" type="number" placeholder="Type here"
-          class="w-full max-w-xs input input-bordered"
-        >
-      </div>
-    </label>
-    <label class="w-full max-w-xs mb-10 form-control">
-      <div class="label">
-        <span class="label-text">{{ t('table.textSize') }}</span>
-      </div>
-      <input
-        v-model="textSizeValue" type="number" placeholder="Type here"
-        class="w-full max-w-xs input input-bordered"
-      >
-    </label>
-    <label class="w-full max-w-xs form-control">
-      <div class="label">
-        <span class="label-text">{{ t('table.highlightColor') }}</span>
-      </div>
-      <ColorPicker ref="colorPickerRef" v-model="patternColorValue" v-model:pure-color="patternColorValue" />
-    </label>
-    <label class="flex flex-row items-center w-full gap-24 mb-0 form-control">
-      <div>
-        <div class="label">
-          <span class="label-text">{{ t('table.patternSetting') }}</span>
-        </div>
-        <div class="h-auto">
-          <PatternSetting
-            :row-count="rowCount" :card-color="cardColor" :pattern-color="patternColor"
-            :pattern-list="patternList"
-            @update:pattern-list="globalConfig.setPatternList"
-          />
-        </div>
-      </div>
-    </label>
-    <div class="flex w-full h-24 gap-3 m-0">
-      <button class="mt-5 btn btn-info btn-sm" @click.stop="clearPattern">
-        <span>{{ t('button.clearPattern') }}</span>
-      </button>
-      <div class="tooltip" :data-tip="t('tooltip.defaultLayout')">
-        <button class="mt-5 btn btn-info btn-sm" @click="resetPattern">
-          <span>{{ t('button.DefaultPattern') }}</span>
-        </button>
-      </div>
-    </div>
-
-    <label class="w-full max-w-xs mb-10 form-control">
-      <div class="label">
-        <span class="label-text">{{ t('table.alwaysDisplay') }}</span>
-      </div>
-      <input
-        type="checkbox" :checked="isShowPrizeListValue" class="mt-2 border-solid checkbox checkbox-secondary border-1"
-        @change="isShowPrizeListValue = !isShowPrizeListValue"
-      >
-    </label>
+    </section>
   </div>
 </template>
 

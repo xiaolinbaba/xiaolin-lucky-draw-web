@@ -29,48 +29,43 @@ const actionsColumns = computed<any[]>(() => {
 </script>
 
 <template>
-  <div class="overflow-x-auto">
-    <table class="table min-w-[600px]">
-      <!-- head -->
-      <thead>
+  <div class="max-w-full overflow-x-auto">
+    <table class="table min-w-[720px]">
+      <thead class="bg-base-200/70 text-base-content/70">
         <tr>
-          <th />
           <th v-for="(item, index) in dataColumns" :key="index">
             {{ item.label }}
           </th>
           <th v-for="(item, index) in actionsColumns" :key="index">
             {{ t('table.operation') }}
           </th>
-          <th />
         </tr>
       </thead>
       <tbody v-if="data.length > 0">
-        <!-- row  -->
-        <tr v-for="item in data" :key="item.id" class="hover">
-          <th>{{ item.id }}</th>
+        <tr v-for="item in data" :key="item.id" class="border-base-content/10 hover:bg-base-200/40">
           <td v-for="(column, index) in dataColumns" :key="index">
             <span v-if="column.formatValue">{{ column.formatValue(item) }}</span>
             <span v-else>{{ item[column.props] }}</span>
           </td>
-          <!-- action -->
-          <td v-for="(column, index) in actionsColumns" :key="index" class="flex gap-2">
-            <button
-              v-for="action in column.actions" :key="action.name" class="btn btn-xs" :class="action.type"
-              @click="action.onClick(item)"
-            >
-              {{ action.label }}
-            </button>
+          <td v-for="(column, index) in actionsColumns" :key="index">
+            <div class="flex flex-wrap gap-2">
+              <button
+                v-for="action in column.actions" :key="action.label" class="btn btn-xs whitespace-nowrap" :class="action.type"
+                @click="action.onClick(item)"
+              >
+                {{ action.label }}
+              </button>
+            </div>
           </td>
         </tr>
       </tbody>
       <tbody v-else>
         <tr>
-          <td colspan="5" class="text-center">
+          <td :colspan="dataColumns.length + actionsColumns.length" class="h-40 text-center text-base-content/55">
             {{ t('table.noneData') }}
           </td>
         </tr>
       </tbody>
-      <!-- foot -->
     </table>
   </div>
 </template>

@@ -1,6 +1,5 @@
 import { createRouter, createWebHashHistory, createWebHistory } from 'vue-router'
 import Layout from '@/layout/index.vue'
-import i18n from '@/locales/i18n'
 import Home from '@/views/Home/index.vue'
 
 const envMode = import.meta.env.MODE
@@ -18,7 +17,8 @@ export const configRoutesChildren = [
     name: 'FaceConfig',
     component: () => import('@/views/Config/Global/FaceConfig.vue'),
     meta: {
-      title: i18n.global.t('sidebar.viewSetting'),
+      titleKey: 'sidebar.viewSetting',
+      descriptionKey: 'admin.description.viewSetting',
       icon: 'setting',
     },
   },
@@ -28,7 +28,8 @@ export const configRoutesChildren = [
     name: 'AllPersonConfig',
     component: () => import('@/views/Config/Person/PersonAll.vue'),
     meta: {
-      title: i18n.global.t('sidebar.personList'),
+      titleKey: 'sidebar.personList',
+      descriptionKey: 'admin.description.personList',
       icon: 'edit',
     },
   },
@@ -38,7 +39,8 @@ export const configRoutesChildren = [
     name: 'AlreadyPerson',
     component: () => import('@/views/Config/Person/PersonAlready.vue'),
     meta: {
-      title: i18n.global.t('sidebar.winnerList'),
+      titleKey: 'sidebar.winnerList',
+      descriptionKey: 'admin.description.winnerList',
       icon: 'home',
     },
   },
@@ -48,7 +50,8 @@ export const configRoutesChildren = [
     name: 'PrizeConfig',
     component: () => import('@/views/Config/Prize/PrizeConfig.vue'),
     meta: {
-      title: i18n.global.t('sidebar.prizeConfiguration'),
+      titleKey: 'sidebar.prizeConfiguration',
+      descriptionKey: 'admin.description.prizeConfiguration',
       icon: 'add',
     },
   },
@@ -58,7 +61,8 @@ export const configRoutesChildren = [
     name: 'ImageConfig',
     component: () => import('@/views/Config/Global/ImageConfig.vue'),
     meta: {
-      title: i18n.global.t('sidebar.imagesManagement'),
+      titleKey: 'sidebar.imagesManagement',
+      descriptionKey: 'admin.description.imagesManagement',
       icon: 'open',
     },
   },
@@ -68,7 +72,8 @@ export const configRoutesChildren = [
     name: 'MusicConfig',
     component: () => import('@/views/Config/Global/MusicConfig.vue'),
     meta: {
-      title: i18n.global.t('sidebar.musicManagement'),
+      titleKey: 'sidebar.musicManagement',
+      descriptionKey: 'admin.description.musicManagement',
       icon: 'play',
     },
   },
@@ -78,7 +83,8 @@ export const configRoutesChildren = [
     name: 'Readme',
     component: () => import('@/views/Config/Readme/index.vue'),
     meta: {
-      title: i18n.global.t('sidebar.operatingInstructions'),
+      titleKey: 'sidebar.operatingInstructions',
+      descriptionKey: 'admin.description.operatingInstructions',
       icon: 'menu',
     },
   },
@@ -103,7 +109,6 @@ const rootRoutes = [
       },
       {
         path: '/config',
-        name: 'Config',
         component: () => import('@/views/Config/index.vue'),
         children: configRoutesChildren,
       },
