@@ -1,4 +1,5 @@
 import dayjs from 'dayjs'
+import { selectAvailableIndex } from './random'
 // 筛选人员数据
 export function filterData(tableData: any[], localRowCount: number) {
   const dataLength = tableData.length
@@ -31,20 +32,9 @@ export function addOtherInfo(personList: any[]) {
   return personList
 }
 
-export function selectCard(cardIndexArr: number[], tableLength: number, _personId: number): number {
-  // 随机选择卡片索引（包含最后一个索引），并避免与已选索引冲突
+export function selectCard(cardIndexArr: number[], tableLength: number, _personId: number): number | null {
   // _personId 目前未参与计算，保留参数以兼容调用方
-  if (tableLength <= 0) {
-    return 0
-  }
-  let cardIndex = Math.floor(Math.random() * tableLength)
-  // 最多尝试 tableLength 次，避免极端情况下递归栈溢出
-  let guard = 0
-  while (cardIndexArr.includes(cardIndex) && guard < tableLength) {
-    cardIndex = Math.floor(Math.random() * tableLength)
-    guard++
-  }
-  return cardIndex
+  return selectAvailableIndex(cardIndexArr, tableLength)
 }
 
 export function themeChange(theme: string) {

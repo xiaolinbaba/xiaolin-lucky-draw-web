@@ -2,7 +2,12 @@
 import { useElementSize } from '@vueuse/core'
 import localforage from 'localforage'
 import Sparticles from 'sparticles'
-import { onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref, shallowRef } from 'vue'
+
+interface SparticlesInstance {
+  destroy: () => void
+  setCanvasSize: (width: number, height: number) => void
+}
 
 const props = defineProps({
   homeBackground: {
@@ -21,6 +26,7 @@ const imageDbStore = localforage.createInstance({
 
 const imgUrl = ref('')
 const starRef = ref<HTMLElement | null>(null)
+const sparticles = shallowRef<SparticlesInstance | null>(null)
 const { width, height } = useElementSize(starRef)
 
 const sparticlesOptions = {
@@ -33,8 +39,8 @@ const sparticlesOptions = {
 }
 
 function addSparticles(node: HTMLElement, width: number, height: number) {
-  // eslint-disable-next-line no-new
-  new Sparticles(node, sparticlesOptions, width, height)
+  sparticles.value?.destroy()
+  sparticles.value = new Sparticles(node, sparticlesOptions, width, height)
 }
 
 function handleResize() {
@@ -42,7 +48,7 @@ function handleResize() {
     return
   }
   if (width.value && height.value) {
-    addSparticles(starRef.value, width.value, height.value)
+    sparticles.value?.setCanvasSize(width.value, height.value)
   }
 }
 
@@ -68,6 +74,8 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
+  sparticles.value?.destroy()
+  sparticles.value = null
 })
 </script>
 

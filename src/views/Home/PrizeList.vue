@@ -1,16 +1,16 @@
 <script setup lang='ts'>
 import type { IPrizeConfig } from '../../types/storeType'
+import { storeToRefs } from 'pinia'
+import { onMounted, ref } from 'vue'
+
+import { useI18n } from 'vue-i18n'
 import defaultPrizeImage from '@/assets/images/龙.png'
 import ImageSync from '@/components/ImageSync/index.vue'
 
 import EditSeparateDialog from '@/components/NumberSeparate/EditSeparateDialog.vue'
+
 import i18n from '@/locales/i18n'
 import useStore from '@/store'
-
-import { storeToRefs } from 'pinia'
-
-import { onMounted, ref } from 'vue'
-import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
 const prizeConfig = useStore().prizeConfig

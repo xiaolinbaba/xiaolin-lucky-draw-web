@@ -1,60 +1,102 @@
 <!-- eslint-disable vue/no-parsing-error -->
 <script setup lang='ts'>
 import type { IPersonConfig } from '@/types/storeType'
-import DaiysuiTable from '@/components/DaiysuiTable/index.vue'
-import i18n from '@/locales/i18n'
-import useStore from '@/store'
-import { addOtherInfo } from '@/utils'
-import { readFileBinary } from '@/utils/file'
-import { getDefaultPersonList } from '@/store/data'
 import { storeToRefs } from 'pinia'
 import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import * as XLSX from 'xlsx'
+import DaiysuiTable from '@/components/DaiysuiTable/index.vue'
+import i18n from '@/locales/i18n'
+import useStore from '@/store'
+import { getDefaultPersonList } from '@/store/data'
+import { addOtherInfo } from '@/utils'
+import { readFileBinary } from '@/utils/file'
 
 const { t } = useI18n()
 const personConfig = useStore().personConfig
 const prizeConfig = useStore().prizeConfig
 const { getAllPersonList: allPersonList, getAlreadyPersonList: alreadyPersonList } = storeToRefs(personConfig)
 const limitType = '.xlsx,.xls'
+const maxExcelFileSize = 10 * 1024 * 1024
+const importError = ref('')
 // const personList = ref<any[]>([])
 
 const resetDataDialog = ref()
 const delAllDataDialog = ref()
 
 async function handleFileChange(e: Event) {
-  const dataBinary = await readFileBinary(((e.target as HTMLInputElement).files as FileList)[0]!)
-  const workBook = XLSX.read(dataBinary, { type: 'binary', cellDates: true })
-  const workSheet = workBook.Sheets[workBook.SheetNames[0]]
-  const excelData = XLSX.utils.sheet_to_json(workSheet)
-  
-  // 将中文/英文表头映射到英文字段名
-  const fieldMapping: Record<string, string> = {
-    // 中文表头
-    [i18n.global.t('data.number')]: 'uid',
-    [i18n.global.t('data.name')]: 'name',
-    [i18n.global.t('data.department')]: 'department',
-    [i18n.global.t('data.identity')]: 'identity',
-    // 英文表头（兼容英文模板）
-    'Number': 'uid',
-    'Name': 'name',
-    'Department': 'department',
-    'Position': 'identity',
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  importError.value = ''
+
+  if (!file) {
+    return
   }
-  
-  // 转换字段名
-  const mappedData = excelData.map((row: any) => {
-    const newRow: any = {}
-    for (const key in row) {
-      const mappedKey = fieldMapping[key] || key
-      newRow[mappedKey] = row[key]
+  if (file.size > maxExcelFileSize) {
+    importError.value = t('error.fileTooLarge', { size: 10 })
+    input.value = ''
+    return
+  }
+
+  try {
+    const dataBinary = await readFileBinary(file)
+    const workBook = XLSX.read(dataBinary, { type: 'array', cellDates: true })
+    const firstSheetName = workBook.SheetNames[0]
+    const workSheet = firstSheetName ? workBook.Sheets[firstSheetName] : undefined
+    if (!workSheet) {
+      throw new Error('Workbook does not contain a worksheet')
     }
-    return newRow
-  })
-  
-  const allData = addOtherInfo(mappedData)
-  personConfig.resetPerson()
-  personConfig.addNotPersonList(allData)
+
+    const excelData = XLSX.utils.sheet_to_json<Record<string, unknown>>(workSheet, { defval: '' })
+    const fieldMapping: Record<string, keyof Pick<IPersonConfig, 'uid' | 'name' | 'department' | 'identity'>> = {
+      编号: 'uid',
+      姓名: 'name',
+      部门: 'department',
+      职位: 'identity',
+      Number: 'uid',
+      Name: 'name',
+      Department: 'department',
+      Position: 'identity',
+    }
+
+    const mappedData = excelData.map((row) => {
+      const newRow: Record<string, unknown> = {}
+      for (const [key, value] of Object.entries(row)) {
+        const mappedKey = fieldMapping[key] || key
+        newRow[mappedKey] = value
+      }
+      return {
+        ...newRow,
+        uid: String(newRow.uid ?? '').trim(),
+        name: String(newRow.name ?? '').trim(),
+        department: String(newRow.department ?? '').trim(),
+        identity: String(newRow.identity ?? '').trim(),
+        avatar: '',
+      }
+    })
+
+    if (mappedData.length === 0 || mappedData.some(row => !row.uid || !row.name)) {
+      throw new Error('Required columns are missing or contain empty values')
+    }
+
+    const uniqueUids = new Set(mappedData.map(row => row.uid))
+    if (uniqueUids.size !== mappedData.length) {
+      throw new Error('Participant numbers must be unique')
+    }
+
+    const allData = addOtherInfo(mappedData) as IPersonConfig[]
+    // Only replace persisted state after the entire workbook has passed validation.
+    personConfig.resetPerson()
+    personConfig.addNotPersonList(allData)
+    prizeConfig.resetDrawProgress()
+  }
+  catch (error) {
+    console.error('Failed to import participant workbook', error)
+    importError.value = t('error.importInvalid')
+  }
+  finally {
+    input.value = ''
+  }
 }
 function exportData() {
   let data = JSON.parse(JSON.stringify(allPersonList.value))
@@ -107,6 +149,7 @@ function resetData() {
 
 function deleteAll() {
   personConfig.deleteAllPerson()
+  prizeConfig.resetDrawProgress()
 }
 
 function delPersonItem(row: IPersonConfig) {
@@ -117,7 +160,7 @@ function delPersonItem(row: IPersonConfig) {
 function downloadTemplate() {
   // 获取默认人员列表
   const defaultPersonList = getDefaultPersonList(50)
-  
+
   // 准备导出数据，只保留需要的字段
   const templateData = defaultPersonList.map((person) => {
     return {
@@ -127,7 +170,7 @@ function downloadTemplate() {
       [i18n.global.t('data.identity')]: person.identity,
     }
   })
-  
+
   // 生成 Excel 文件
   const worksheet = XLSX.utils.json_to_sheet(templateData)
   const workbook = XLSX.utils.book_new()
@@ -236,7 +279,9 @@ onMounted(() => {
         <button
           class="btn btn-secondary btn-sm"
           @click="downloadTemplate"
-        >{{ t('button.downloadTemplate') }}</button>
+        >
+          {{ t('button.downloadTemplate') }}
+        </button>
       </div>
       <div class="">
         <label for="explore">
@@ -262,6 +307,9 @@ onMounted(() => {
         <span>{{ alreadyPersonList.length }}</span>
         <span>&nbsp;/&nbsp;</span>
         <span>{{ allPersonList.length }}</span>
+      </div>
+      <div v-if="importError" role="alert" class="alert alert-error py-2">
+        {{ importError }}
       </div>
     </div>
     <DaiysuiTable :table-columns="tableColumns" :data="allPersonList" />

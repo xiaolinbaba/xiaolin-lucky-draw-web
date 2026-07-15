@@ -1,11 +1,11 @@
 <!-- eslint-disable vue/no-parsing-error -->
 <script setup lang='ts'>
 import type { IPersonConfig } from '@/types/storeType'
+import { storeToRefs } from 'pinia'
+import { useI18n } from 'vue-i18n'
 import DaiysuiTable from '@/components/DaiysuiTable/index.vue'
 import i18n from '@/locales/i18n'
 import useStore from '@/store'
-import { storeToRefs } from 'pinia'
-import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
 const personConfig = useStore().personConfig

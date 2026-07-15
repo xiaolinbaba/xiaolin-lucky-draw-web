@@ -1,0 +1,13 @@
+packages: []
+
+allowBuilds:
+  '@parcel/watcher': true
+  core-js: false
+  esbuild: true
+  sharp: true
+  unrs-resolver: true
+  vue-demi: true
+  workerd: true
+
+overrides:
+  dompurify: ">=3.2.7"

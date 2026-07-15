@@ -1,7 +1,3 @@
-import svgIcon from '@/components/SvgIcon/index.vue'
-import i18n from '@/locales/i18n'
-// svg全局组件// 路由
-import router from '@/router'
 // pinia
 import { createPinia } from 'pinia'
 // pinia持久化
@@ -9,6 +5,10 @@ import piniaPluginPersist from 'pinia-plugin-persist'
 import * as THREE from 'three'
 import { createApp } from 'vue'
 import VueDOMPurifyHTML from 'vue-dompurify-html'
+import svgIcon from '@/components/SvgIcon/index.vue'
+import i18n from '@/locales/i18n'
+// svg全局组件// 路由
+import router from '@/router'
 import App from './App.vue'
 // 全局svg组件
 import 'virtual:svg-icons-register'

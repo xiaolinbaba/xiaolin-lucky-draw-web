@@ -1,15 +1,24 @@
 <script setup lang='ts'>
-import i18n from '@/locales/i18n'
 import markdownit from 'markdown-it'
 import { onMounted, ref } from 'vue'
+import i18n from '@/locales/i18n'
 
 const md = markdownit()
 const readmeHtml = ref('')
 function readMd() {
   fetch(`/${i18n.global.t('data.readmeName')}`)
-    .then(res => res.text())
+    .then((res) => {
+      if (!res.ok) {
+        throw new Error(`Unable to load README: ${res.status}`)
+      }
+      return res.text()
+    })
     .then((res) => {
       readmeHtml.value = md.render(res)
+    })
+    .catch((error) => {
+      console.error('Failed to load README', error)
+      readmeHtml.value = ''
     })
 }
 

@@ -1,7 +1,7 @@
+import { createRouter, createWebHashHistory, createWebHistory } from 'vue-router'
 import Layout from '@/layout/index.vue'
 import i18n from '@/locales/i18n'
 import Home from '@/views/Home/index.vue'
-import { createRouter, createWebHashHistory, createWebHistory } from 'vue-router'
 
 const envMode = import.meta.env.MODE
 

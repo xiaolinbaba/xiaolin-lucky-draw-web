@@ -1,6 +1,6 @@
 import type { IImage, IMusic } from '@/types/storeType'
-import i18n, { browserLanguage } from '@/locales/i18n'
 import { defineStore } from 'pinia'
+import i18n, { browserLanguage } from '@/locales/i18n'
 import { defaultImageList, defaultMusicList, defaultPatternList } from './data'
 // import { IPrizeConfig } from '@/types/storeType';
 
@@ -167,7 +167,7 @@ export const useGlobalConfig = defineStore('global', {
     },
     // 重置图案列表
     resetPatternList() {
-      this.globalConfig.theme.patternList = defaultPatternList
+      this.globalConfig.theme.patternList = clone(defaultPatternList)
     },
     // 添加音乐
     addMusic(music: IMusic) {
@@ -197,7 +197,7 @@ export const useGlobalConfig = defineStore('global', {
     },
     // 重置音乐列表
     resetMusicList() {
-      this.globalConfig.musicList = JSON.parse(JSON.stringify(defaultMusicList)) as IMusic[]
+      this.globalConfig.musicList = clone(defaultMusicList) as IMusic[]
     },
     // 清空音乐列表
     clearMusicList() {
@@ -223,7 +223,7 @@ export const useGlobalConfig = defineStore('global', {
     },
     // 重置图片列表
     resetImageList() {
-      this.globalConfig.imageList = defaultImageList as IImage[]
+      this.globalConfig.imageList = clone(defaultImageList) as IImage[]
     },
     // 清空图片列表
     clearImageList() {

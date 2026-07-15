@@ -1,19 +1,33 @@
-export function readFileBinary(file: any): Promise<any> {
-  return new Promise((resolve) => {
+export function readFileBinary(file: File): Promise<ArrayBuffer> {
+  return new Promise((resolve, reject) => {
     const reader = new FileReader()
-    reader.readAsBinaryString(file)
-    reader.onload = (ev: any) => {
-      resolve(ev.target.result)
+    reader.onload = () => {
+      if (reader.result instanceof ArrayBuffer) {
+        resolve(reader.result)
+      }
+      else {
+        reject(new TypeError('Unable to read file as an ArrayBuffer'))
+      }
     }
+    reader.onerror = () => reject(reader.error ?? new Error('Unable to read file'))
+    reader.onabort = () => reject(new DOMException('File reading was aborted', 'AbortError'))
+    reader.readAsArrayBuffer(file)
   })
 }
 
-export function readFileData(file: any): Promise<{ dataUrl: string, fileName: string }> {
-  return new Promise((resolve) => {
+export function readFileData(file: File): Promise<{ dataUrl: string, fileName: string }> {
+  return new Promise((resolve, reject) => {
     const reader = new FileReader()
-    reader.readAsDataURL(file)
-    reader.onload = (ev: any) => {
-      resolve({ dataUrl: ev.target.result, fileName: file.name })
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        resolve({ dataUrl: reader.result, fileName: file.name })
+      }
+      else {
+        reject(new TypeError('Unable to read file as a data URL'))
+      }
     }
+    reader.onerror = () => reject(reader.error ?? new Error('Unable to read file'))
+    reader.onabort = () => reject(new DOMException('File reading was aborted', 'AbortError'))
+    reader.readAsDataURL(file)
   })
 }

@@ -34,7 +34,7 @@ export const usePrizeConfig = defineStore('prize', {
     // 根据id获取配置
     getPrizeConfigById(state) {
       return (id: number | string) => {
-        return state.prizeConfig.prizeList.find(item => item.id === id)
+        return state.prizeConfig.prizeList.find(item => String(item.id) === String(id))
       }
     },
     // 获取当前奖项
@@ -58,42 +58,73 @@ export const usePrizeConfig = defineStore('prize', {
     },
     // 删除奖项
     deletePrizeConfig(prizeConfigItemId: number | string) {
-      this.prizeConfig.prizeList = this.prizeConfig.prizeList.filter(item => item.id !== prizeConfigItemId)
+      this.prizeConfig.prizeList = this.prizeConfig.prizeList.filter(item => String(item.id) !== String(prizeConfigItemId))
+      if (String(this.prizeConfig.currentPrize.id) === String(prizeConfigItemId)) {
+        this.selectNextAvailablePrize()
+      }
     },
     // 更新奖项数据
     updatePrizeConfig(prizeConfigItem: IPrizeConfig) {
-      const prizeListLength = this.prizeConfig.prizeList.length
-      if (prizeConfigItem.isUsed && prizeListLength) {
-        for (let i = 0; i < prizeListLength; i++) {
-          if (!this.prizeConfig.prizeList[i].isUsed) {
-            this.setCurrentPrize(this.prizeConfig.prizeList[i])
-            break
-          }
-        }
-      }
-      else {
+      if (!prizeConfigItem.isUsed) {
         return
       }
+      this.selectNextAvailablePrize()
       this.resetTemporaryPrize()
     },
     // 删除全部奖项
     deleteAllPrizeConfig() {
       this.prizeConfig.prizeList = [] as IPrizeConfig[]
+      this.setNoCurrentPrize()
+      this.resetTemporaryPrize()
     },
     // 设置当前奖项
     setCurrentPrize(prizeConfigItem: IPrizeConfig) {
       this.prizeConfig.currentPrize = prizeConfigItem
     },
-    // 设置临时奖项
-    setTemporaryPrize(prizeItem: IPrizeConfig) {
-      if (prizeItem.isShow === false) {
-        for (let i = 0; i < this.prizeConfig.prizeList.length; i++) {
-          if (this.prizeConfig.prizeList[i].isUsed === false) {
-            this.setCurrentPrize(this.prizeConfig.prizeList[i])
+    setNoCurrentPrize() {
+      this.prizeConfig.currentPrize = clone(defaultTemporaryPrize)
+    },
+    selectNextAvailablePrize() {
+      const nextPrize = this.prizeConfig.prizeList.find(prize => prize.isShow && !prize.isUsed)
+      if (nextPrize) {
+        this.setCurrentPrize(nextPrize)
+      }
+      else {
+        this.setNoCurrentPrize()
+      }
+    },
+    rollbackPrizeWins(prizeIds: Array<number | string>) {
+      let reopenedPrize: IPrizeConfig | undefined
+      const uniquePrizeIds = new Set(prizeIds.map(String))
 
+      for (const prizeId of uniquePrizeIds) {
+        const prize = this.prizeConfig.prizeList.find(item => String(item.id) === prizeId)
+        if (!prize || prize.isUsedCount <= 0) {
+          continue
+        }
+
+        prize.isUsedCount--
+        prize.isUsed = false
+
+        for (let index = prize.separateCount.countList.length - 1; index >= 0; index--) {
+          const countItem = prize.separateCount.countList[index]
+          if (countItem.isUsedCount > 0) {
+            countItem.isUsedCount--
             break
           }
         }
+
+        reopenedPrize ??= prize
+      }
+
+      if (reopenedPrize) {
+        this.setCurrentPrize(reopenedPrize)
+      }
+    },
+    // 设置临时奖项
+    setTemporaryPrize(prizeItem: IPrizeConfig) {
+      if (prizeItem.isShow === false) {
+        this.selectNextAvailablePrize()
         this.resetTemporaryPrize()
 
         return
@@ -116,6 +147,8 @@ export const usePrizeConfig = defineStore('prize', {
     resetDrawProgress() {
       const list = this.prizeConfig.prizeList
       if (!list?.length) {
+        this.setNoCurrentPrize()
+        this.resetTemporaryPrize()
         return
       }
 
@@ -129,8 +162,8 @@ export const usePrizeConfig = defineStore('prize', {
         }
       }
 
-      // 当前奖项切回第一个未使用奖项（此处全部已重置为未使用）
-      this.setCurrentPrize(list[0])
+      // 当前奖项切回第一个可见奖项（此处全部已重置为未使用）
+      this.selectNextAvailablePrize()
       this.resetTemporaryPrize()
     },
   },

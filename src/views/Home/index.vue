@@ -1,22 +1,23 @@
 <script setup lang="ts">
-import type { IPersonConfig } from '@/types/storeType'
 import type { Material } from 'three'
-import StarsBackground from '@/components/StarsBackground/index.vue'
-import { useElementPosition, useElementStyle } from '@/hooks/useElement'
-import i18n from '@/locales/i18n'
-import useStore from '@/store'
-import { filterData, selectCard } from '@/utils'
-import { rgba } from '@/utils/color'
+import type { IPersonConfig } from '@/types/storeType'
 import * as TWEEN from '@tweenjs/tween.js'
 import confetti from 'canvas-confetti'
 import { storeToRefs } from 'pinia'
 import { Object3D, PerspectiveCamera, Scene, Vector3 } from 'three'
 import { CSS3DObject, CSS3DRenderer } from 'three-css3d'
 import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls.js'
-import { nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useToast } from 'vue-toast-notification'
+import StarsBackground from '@/components/StarsBackground/index.vue'
+import { useElementPosition, useElementStyle } from '@/hooks/useElement'
+import i18n from '@/locales/i18n'
+import useStore from '@/store'
+import { filterData, selectCard } from '@/utils'
+import { rgba } from '@/utils/color'
+import { sampleWithoutReplacement } from '@/utils/random'
 import PrizeList from './PrizeList.vue'
 import 'vue-toast-notification/dist/theme-sugar.css'
 
@@ -402,7 +403,7 @@ function startLottery() {
     return
   }
   // 验证是否已抽完全部奖项
-  if (currentPrize.value.isUsed || !currentPrize.value) {
+  if (!currentPrize.value?.isShow || currentPrize.value.isUsed) {
     toast.open({
       message: i18n.global.t('error.personIsAllDone'),
       type: 'warning',
@@ -437,15 +438,8 @@ function startLottery() {
       }
     }
   }
-  luckyCount.value = leftover < luckyCount.value ? leftover : luckyCount.value
-  for (let i = 0; i < luckyCount.value; i++) {
-    if (personPool.value.length > 0) {
-      // 解决随机元素概率过于不均等问题
-      const randomIndex = Math.floor(Math.random() * personPool.value.length)
-      luckyTargets.value.push(personPool.value[randomIndex])
-      personPool.value.splice(randomIndex, 1)
-    }
-  }
+  luckyCount.value = Math.min(leftover, luckyCount.value, objects.value.length)
+  luckyTargets.value = sampleWithoutReplacement(personPool.value, luckyCount.value)
 
   toast.open({
     // message: `现在抽取${currentPrize.value.name} ${leftover}人`,
@@ -470,6 +464,9 @@ async function stopLottery() {
   const windowSize = { width: window.innerWidth, height: window.innerHeight }
   luckyTargets.value.forEach((person: IPersonConfig, index: number) => {
     const cardIndex = selectCard(luckyCardList.value, tableData.value.length, person.id)
+    if (cardIndex === null) {
+      return
+    }
     luckyCardList.value.push(cardIndex)
     const totalLuckyCount = luckyTargets.value.length
     const item = objects.value[cardIndex]
@@ -591,6 +588,7 @@ function centerFire(particleRatio: number, opts: any) {
 
 function setDefaultPersonList() {
   personConfig.setDefaultPersonList()
+  prizeConfig.resetDrawProgress()
   // 刷新页面
   window.location.reload()
 }
@@ -655,8 +653,9 @@ function cleanup() {
   TWEEN.removeAll()
 
   // 清理动画循环
-  if ((window as any).cancelAnimationFrame) {
-    (window as any).cancelAnimationFrame(animationFrameId.value)
+  if (animationFrameId.value !== null) {
+    cancelAnimationFrame(animationFrameId.value)
+    animationFrameId.value = null
   }
   //   animationRunning.value = false
   clearInterval(intervalTimer.value)
@@ -693,7 +692,7 @@ function cleanup() {
   }
 
   if (controls.value) {
-    controls.value.removeEventListener('change')
+    controls.value.removeEventListener('change', render)
     controls.value.dispose()
   }
   //   移除所有事件监听
@@ -702,19 +701,18 @@ function cleanup() {
   camera.value = null
   renderer.value = null
   controls.value = null
+  confetti.reset()
 }
 onMounted(() => {
   initTableData()
   init()
   animation()
-  containerRef.value!.style.color = `${textColor}`
+  containerRef.value!.style.color = textColor.value
   randomBallData()
   window.addEventListener('keydown', listenKeyboard)
 })
 onUnmounted(() => {
-  nextTick(() => {
-    cleanup()
-  })
+  cleanup()
   clearInterval(intervalTimer.value)
   intervalTimer.value = null
   window.removeEventListener('keydown', listenKeyboard)
@@ -727,7 +725,7 @@ onUnmounted(() => {
       class="pt-12 m-0 mb-12 font-mono tracking-wide text-center leading-12 header-title flex items-center justify-center gap-3"
       :style="{ fontSize: `${textSize * 1.5}px`, color: textColor }"
     >
-      <img src="/favicon.svg" alt="Luck" class="w-12 h-12" />
+      <img src="/favicon.svg" alt="Luck" class="w-12 h-12">
       {{ topTitle }}
     </h2>
     <div class="flex gap-3">

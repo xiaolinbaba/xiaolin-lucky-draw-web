@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import ToTop from '@/components/ToTop/index.vue'
 import { useScroll } from '@vueuse/core'
 // import Header from './Header/index.vue';
 // import Footer from './Footer/index.vue';
 import { ref } from 'vue'
+import ToTop from '@/components/ToTop/index.vue'
 
 const mainContainer = ref<HTMLElement | null>(null)
 

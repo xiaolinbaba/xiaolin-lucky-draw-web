@@ -1,43 +1,63 @@
 <script setup lang='ts'>
 import type { IImage } from '@/types/storeType'
+import localforage from 'localforage'
+import { storeToRefs } from 'pinia'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import ImageSync from '@/components/ImageSync/index.vue'
 import useStore from '@/store'
 import { readFileData } from '@/utils/file'
-import localforage from 'localforage'
-import { storeToRefs } from 'pinia'
-import { onMounted, ref, watch } from 'vue'
-import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
 const globalConfig = useStore().globalConfig
 const { getImageList: localImageList } = storeToRefs(globalConfig)
 const limitType = ref('image/*')
 const imgUploadToast = ref(0) // 0是不显示，1是成功，2是失败,3是不是图片
+const maxImageFileSize = 10 * 1024 * 1024
+let toastTimer: ReturnType<typeof setTimeout> | undefined
 const imageDbStore = localforage.createInstance({
   name: 'imgStore',
 })
 async function handleFileChange(e: Event) {
-  const isImage = /image*/.test(((e.target as HTMLInputElement).files as FileList)[0].type)
-  if (!isImage) {
-    imgUploadToast.value = 3
-
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) {
     return
   }
-  const { dataUrl, fileName } = await readFileData(((e.target as HTMLInputElement).files as FileList)[0])
-  imageDbStore.setItem(`${new Date().getTime().toString()}+${fileName}`, dataUrl)
-    .then(() => {
-      imgUploadToast.value = 1
-      getImageDbStore()
-    })
-    .catch(() => {
-      imgUploadToast.value = 2
-    })
+  if (!file.type.startsWith('image/')) {
+    imgUploadToast.value = 3
+    input.value = ''
+    return
+  }
+  if (file.size > maxImageFileSize) {
+    imgUploadToast.value = 4
+    input.value = ''
+    return
+  }
+
+  try {
+    const { dataUrl, fileName } = await readFileData(file)
+    await imageDbStore.setItem(`${new Date().getTime().toString()}+${fileName}`, dataUrl)
+    imgUploadToast.value = 1
+    await getImageDbStore()
+  }
+  catch (error) {
+    console.error('Failed to store image', error)
+    imgUploadToast.value = 2
+  }
+  finally {
+    input.value = ''
+  }
 }
 
 async function getImageDbStore() {
   const keys = await imageDbStore.keys()
+  const existingImageIds = new Set(localImageList.value.map(item => item.id))
   if (keys.length > 0) {
     imageDbStore.iterate((value, key) => {
+      if (existingImageIds.has(key)) {
+        return
+      }
       globalConfig.addImage({
         id: key,
         name: key,
@@ -56,15 +76,17 @@ function removeImage(item: IImage) {
   globalConfig.removeImage(item.id)
 }
 onMounted(() => {
-  // getImageDbStore()
+  void getImageDbStore()
 })
 watch(() => imgUploadToast.value, (val) => {
   if (val !== 0) {
-    setTimeout(() => {
+    clearTimeout(toastTimer)
+    toastTimer = setTimeout(() => {
       imgUploadToast.value = 0
     }, 2000)
   }
 })
+onUnmounted(() => clearTimeout(toastTimer))
 </script>
 
 <template>
@@ -77,6 +99,9 @@ watch(() => imgUploadToast.value, (val) => {
     </div>
     <div v-if="imgUploadToast === 3" class="alert alert-error">
       <span>{{ t('error.notImage') }}</span>
+    </div>
+    <div v-if="imgUploadToast === 4" class="alert alert-error">
+      <span>{{ t('error.fileTooLarge', { size: 10 }) }}</span>
     </div>
   </div>
 

@@ -1,6 +1,5 @@
 /// <reference types="vitest" />
 
-import { createRequire } from 'node:module'
 import path from 'node:path'
 import legacy from '@vitejs/plugin-legacy'
 import vue from '@vitejs/plugin-vue'
@@ -10,13 +9,8 @@ import IconsResolver from 'unplugin-icons/resolver'
 import Icons from 'unplugin-icons/vite'
 import Components from 'unplugin-vue-components/vite'
 import { defineConfig, loadEnv } from 'vite'
-import viteCompression from 'vite-plugin-compression'
 import { createSvgIconsPlugin } from 'vite-plugin-svg-icons'
-import vueDevTools from 'vite-plugin-vue-devtools'
 // https://vitejs.dev/config/
-
-const require = createRequire(import.meta.url)
-const process = require('node:process')
 
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, __dirname)
@@ -31,17 +25,6 @@ export default defineConfig(({ mode }) => {
                 additionalLegacyPolyfills: ['regenerator-runtime/runtime'],
                 modernPolyfills: false, // 禁用现代 polyfills 以减少内存占用
             })] : []),
-            // vueDevTools(),
-            // 仅在非file模式下启用压缩以减少file模式下的内存占用
-            ...(mode === 'file' ? [] : [
-                viteCompression({
-                    verbose: false,
-                    disable: false,
-                    threshold: 10240,
-                    algorithm: 'gzip',
-                    ext: '.gz',
-                })
-            ]),
             // 仅在显式开启 ANALYZE 时启用 visualizer，避免分析报告被打包进生产产物
             ...(mode !== 'file' && process.env.ANALYZE === 'true' ? [
                 visualizer({
@@ -134,12 +117,15 @@ export default defineConfig(({ mode }) => {
                     entryFileNames: mode === 'file' ? 'js/[name]-[hash].js' : `js/${chunkName}-[hash].js`, // 包的入口文件名称
                     assetFileNames: mode === 'file' ? '[ext]/[name]-[hash].[ext]' : `[ext]/${chunkName}-[hash].[ext]`, // 资源文件像 字体，图片等
                     manualChunks: mode === 'file' ? undefined : function manualChunks(id) {
-                        if (id.includes('node_modules')) {
-                            return id
-                                .toString()
-                                .split('node_modules/')[1]
-                                .split('/')[0]
-                                .toString()
+                        if (id.includes('/node_modules/xlsx/')) {
+                            return 'xlsx'
+                        }
+                        if (
+                            id.includes('/node_modules/three/')
+                            || id.includes('/node_modules/three-css3d/')
+                            || id.includes('/node_modules/@tweenjs/tween.js/')
+                        ) {
+                            return 'three'
                         }
                     },
                 },

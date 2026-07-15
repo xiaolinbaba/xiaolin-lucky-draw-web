@@ -29,7 +29,7 @@ export const usePersonConfig = defineStore('person', {
     getNotThisPrizePersonList(state: any) {
       const currentPrize = usePrizeConfig().prizeConfig.currentPrize
       const data = state.personConfig.allPersonList.filter((item: IPersonConfig) => {
-        return !item.prizeId.includes(currentPrize.id as string)
+        return !item.prizeId.includes(String(currentPrize.id))
       })
 
       return data
@@ -75,7 +75,7 @@ export const usePersonConfig = defineStore('person', {
             // person.prizeName += prize.name
             item.prizeTime.push(dayjs(new Date()).format('YYYY-MM-DD HH:mm:ss'))
             // person.prizeTime = new Date().toString()
-            item.prizeId.push(prize.id as string)
+            item.prizeId.push(String(prize.id))
           }
 
           return item
@@ -88,7 +88,7 @@ export const usePersonConfig = defineStore('person', {
       if (person.id === undefined || person.id == null) {
         return
       }
-      const alreadyPersonListLength = this.personConfig.alreadyPersonList.length
+      const prizeIds = [...person.prizeId]
       for (let i = 0; i < this.personConfig.allPersonList.length; i++) {
         if (person.id === this.personConfig.allPersonList[i].id) {
           this.personConfig.allPersonList[i].isWin = false
@@ -99,17 +99,18 @@ export const usePersonConfig = defineStore('person', {
           break
         }
       }
-      for (let i = 0; i < alreadyPersonListLength; i++) {
-        this.personConfig.alreadyPersonList = this.personConfig.alreadyPersonList.filter((item: IPersonConfig) =>
-          item.id !== person.id,
-        )
-      }
+      this.personConfig.alreadyPersonList = this.personConfig.alreadyPersonList.filter((item: IPersonConfig) =>
+        item.id !== person.id,
+      )
+      usePrizeConfig().rollbackPrizeWins(prizeIds)
     },
     // 删除指定人员
     deletePerson(person: IPersonConfig) {
-      if (person.id !== undefined || person.id != null) {
+      if (person.id !== undefined && person.id != null) {
+        const prizeIds = [...person.prizeId]
         this.personConfig.allPersonList = this.personConfig.allPersonList.filter((item: IPersonConfig) => item.id !== person.id)
         this.personConfig.alreadyPersonList = this.personConfig.alreadyPersonList.filter((item: IPersonConfig) => item.id !== person.id)
+        usePrizeConfig().rollbackPrizeWins(prizeIds)
       }
     },
     // 删除所有人员

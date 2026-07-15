@@ -1,12 +1,12 @@
 <script setup lang='ts'>
 import type { IPrizeConfig } from '@/types/storeType'
-import EditSeparateDialog from '@/components/NumberSeparate/EditSeparateDialog.vue'
-import i18n from '@/locales/i18n'
-import useStore from '@/store'
 import localforage from 'localforage'
 import { storeToRefs } from 'pinia'
 import { onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import EditSeparateDialog from '@/components/NumberSeparate/EditSeparateDialog.vue'
+import i18n from '@/locales/i18n'
+import useStore from '@/store'
 
 const { t } = useI18n()
 const imageDbStore = localforage.createInstance({

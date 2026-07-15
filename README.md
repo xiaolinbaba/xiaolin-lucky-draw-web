@@ -57,63 +57,27 @@ pnpm build
 
 ## 部署
 
-### Cloudflare Pages
+### Cloudflare Workers Static Assets
 
-项目已配置支持 Cloudflare Pages 部署。这是一个 Vue 3 + Vite 的抽奖系统项目，可以完全部署到 Cloudflare Pages。
+项目使用 `wrangler.jsonc` 将 Vite 的 `dist` 目录作为 Workers Static Assets 部署，并为 Vue Router 启用了 SPA fallback。Wrangler 已作为项目开发依赖安装，无需全局安装。
 
-#### 方法一：通过 Cloudflare Dashboard 部署
+Cloudflare Workers Builds 的 Node.js 版本已通过 `.node-version` 固定为 `22.16.0`。
 
-1. **登录 Cloudflare Dashboard**
-   - 访问 https://dash.cloudflare.com/
-   - 登录你的账户
-
-2. **创建 Pages 项目**
-   - 进入 "Workers & Pages" → "Pages"
-   - 点击 "Create a project"
-   - 选择 "Connect to Git"（推荐）或 "Upload assets"
-
-3. **连接 Git 仓库**
-   - 选择你的 Git 提供商（GitHub、GitLab 等）
-   - 授权 Cloudflare 访问你的仓库
-   - 选择这个项目仓库
-
-4. **配置构建设置**
-   - **项目名称**: `log-lottery`（或你喜欢的名称）
-   - **生产分支**: `main` 或 `master`（根据你的主分支）
-   - **构建命令**: `pnpm build` 或 `npm run build`
-   - **构建输出目录**: `dist`
-   - **根目录**: `/`（项目根目录）
-
-5. **环境变量（可选）**
-   - 如果项目需要环境变量，在 "Environment variables" 中添加
-   - 例如：`VITE_BASE_URL`（如果需要）
-
-6. **部署**
-   - 点击 "Save and Deploy"
-   - Cloudflare 会自动构建并部署你的项目
-
-#### 方法二：使用 Wrangler CLI 部署
-
-1. **安装 Wrangler**
+1. **安装依赖并登录 Cloudflare**
    ```bash
-   npm install -g wrangler
-   # 或
-   pnpm add -g wrangler
+   pnpm install --frozen-lockfile
+   pnpm exec wrangler login
    ```
 
-2. **登录 Cloudflare**
-   ```bash
-   wrangler login
-   ```
-
-3. **构建项目**
+2. **本地预览 Cloudflare 路由行为**
    ```bash
    pnpm build
+   pnpm preview:cloudflare
    ```
 
-4. **部署到 Pages**
+3. **构建并部署**
    ```bash
-   wrangler pages deploy dist --project-name=log-lottery
+   pnpm deploy
    ```
 
 #### 重要配置说明
@@ -122,7 +86,7 @@ pnpm build
 
 当前 `vite.config.ts` 中，非 file 模式的 base 路径是 `/`。
 
-**如果部署到 Cloudflare Pages 的根路径（推荐）：**
+**如果部署到 Cloudflare Workers 的根路径（推荐）：**
 - 当前配置已正确：`base: mode === 'file' ? './' : '/'`
 
 **如果部署到子路径（如 `/log-lottery/`）：**
@@ -131,9 +95,9 @@ pnpm build
 
 **2. Vue Router 配置**
 
-项目使用 Vue Router，需要确保：
-- 使用 History 模式（需要服务器支持）
-- 已创建 `_redirects` 文件（已包含在项目中）用于处理路由
+项目使用 Vue Router History 模式。`wrangler.jsonc` 中的 `not_found_handling: "single-page-application"` 会把未知的页面导航交给 `index.html`，无需额外 Worker 代码。
+
+SheetJS 依赖按官方建议固定在 `vendor/xlsx-0.20.3.tgz`，避免部署构建依赖外部 CDN，并由锁文件记录完整性。
 
 **3. API 请求配置**
 
@@ -142,26 +106,16 @@ pnpm build
 - 生产环境：需要配置实际的 API 地址
 - 可以通过环境变量 `VITE_BASE_URL` 配置
 
-#### 自定义域名
+#### 自定义域名与持续部署
 
-1. 在 Cloudflare Pages 项目设置中
-2. 进入 "Custom domains"
-3. 添加你的自定义域名
-4. Cloudflare 会自动配置 DNS
-
-#### 持续部署
-
-如果通过 Git 连接部署：
-- 每次推送到主分支会自动触发部署
-- 可以在 "Deployments" 中查看部署历史
-- 支持预览部署（Pull Request）
+可在 Workers 项目的 Settings → Domains & Routes 添加自定义域名。使用 Cloudflare Builds 或外部 CI 时，构建命令为 `pnpm build`，部署命令为 `pnpm exec wrangler deploy`。
 
 #### 注意事项
 
 1. **构建命令**: 确保使用 `pnpm build` 或 `npm run build`（不是 `build:file`）
 2. **输出目录**: 确保是 `dist`（不是 `dist-file`）
-3. **Node 版本**: Cloudflare Pages 默认使用 Node 18，如果需要其他版本，可以在构建设置中配置
-4. **包管理器**: 如果使用 `pnpm`，确保在构建命令前添加 `pnpm install`
+3. **依赖安装**: CI 使用 `pnpm install --frozen-lockfile`，确保部署可复现
+4. **配置文件**: 修改 `wrangler.jsonc` 后先执行 `pnpm preview:cloudflare` 验证
 
 #### 故障排除
 
@@ -171,7 +125,7 @@ pnpm build
 - 查看构建日志中的错误信息
 
 **路由 404 错误**
-- 确保 `_redirects` 文件在 `dist` 目录中
+- 检查 `wrangler.jsonc` 的 `assets.directory` 和 `not_found_handling`
 - 检查 Vue Router 的 base 配置
 
 **API 请求失败**
@@ -186,7 +140,8 @@ pnpm build
 luck/
 ├── public/              # 静态资源
 │   ├── images/         # 图片资源
-│   ├── _redirects      # Cloudflare Pages 重定向规则
+│   ├── _redirects      # Cloudflare Pages 兼容重定向规则
+│   ├── _headers        # Cloudflare 安全头和静态资源缓存规则
 │   └── favicon.svg     # 网站图标
 ├── src/
 │   ├── api/            # API 请求
@@ -199,7 +154,7 @@ luck/
 │   ├── store/        # 状态管理
 │   ├── utils/        # 工具函数
 │   └── views/        # 页面组件
-├── wrangler.toml     # Cloudflare 配置
+├── wrangler.jsonc    # Cloudflare Workers Static Assets 配置
 └── vite.config.ts    # Vite 配置
 ```
 

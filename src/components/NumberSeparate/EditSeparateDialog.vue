@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import type { Separate } from '@/types/storeType'
-import { onMounted, ref, toRefs, watch } from 'vue'
+import { onMounted, onUnmounted, ref, toRefs, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const props = defineProps({
@@ -61,14 +61,14 @@ watch(totalNumber, (val) => {
     scaleList.value.unshift(0)
   }
 })
-onMounted(() => {
-  // 阻止esc事件
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      e.preventDefault()
-    }
-  })
-})
+function preventEscape(e: KeyboardEvent) {
+  if (e.key === 'Escape' && separatedNumberRef.value?.open) {
+    e.preventDefault()
+  }
+}
+
+onMounted(() => document.addEventListener('keydown', preventEscape))
+onUnmounted(() => document.removeEventListener('keydown', preventEscape))
 </script>
 
 <template>

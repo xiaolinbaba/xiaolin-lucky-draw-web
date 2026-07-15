@@ -1,10 +1,10 @@
 <script setup lang='ts'>
-import useStore from '@/store'
 import localforage from 'localforage'
 import { storeToRefs } from 'pinia'
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
+import useStore from '@/store'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -40,7 +40,13 @@ async function play(item: any) {
   }
   audio.value.pause()
   audio.value.src = audioUrl
-  audio.value.play()
+  try {
+    await audio.value.play()
+  }
+  catch (error) {
+    console.error('Unable to play audio', error)
+    globalConfig.setCurrentMusic(item, true)
+  }
 }
 function playMusic(item: any, skip = false) {
   if (!item) {
@@ -115,7 +121,7 @@ onUnmounted(() => {
 })
 watch(currentMusic, (val: any) => {
   if (!val.paused && audio.value) {
-    play(val.item)
+    void play(val.item)
   }
   else {
     audio.value.pause()

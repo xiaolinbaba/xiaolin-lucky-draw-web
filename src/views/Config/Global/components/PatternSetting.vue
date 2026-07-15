@@ -19,19 +19,23 @@ const props = defineProps({
     default: () => [],
   },
 })
+const emit = defineEmits<{
+  'update:patternList': [value: number[]]
+}>()
 const data = computed(() => {
   return props
 })
 
 function updatePatternList(event: Event, item: number) {
-  if (data.value.patternList.includes(item)) {
-    const index = data.value.patternList.indexOf(item)
-    data.value.patternList.splice(index, 1)
+  const nextPatternList = [...data.value.patternList] as number[]
+  if (nextPatternList.includes(item)) {
+    const index = nextPatternList.indexOf(item)
+    nextPatternList.splice(index, 1)
   }
   else {
-    data.value.patternList.push(item)
+    nextPatternList.push(item)
   }
-  // emits
+  emit('update:patternList', nextPatternList)
 }
 </script>
 

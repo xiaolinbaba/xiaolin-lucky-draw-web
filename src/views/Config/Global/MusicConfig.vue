@@ -1,15 +1,17 @@
 <script setup lang='ts'>
 import type { IMusic } from '@/types/storeType'
-import useStore from '@/store'
-import { readFileData } from '@/utils/file'
 import localforage from 'localforage'
 import { storeToRefs } from 'pinia'
-
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+
+import useStore from '@/store'
+import { readFileData } from '@/utils/file'
 
 const { t } = useI18n()
 const audioUploadToast = ref(0) // 0是不显示，1是成功，2是失败,3是不是图片
+const maxAudioFileSize = 50 * 1024 * 1024
+let toastTimer: ReturnType<typeof setTimeout> | undefined
 const audioDbStore = localforage.createInstance({
   name: 'audioStore',
 })
@@ -24,25 +26,31 @@ async function play(item: IMusic) {
 
 function deleteMusic(item: IMusic) {
   globalConfig.removeMusic(item.id)
-  audioDbStore.removeItem(item.name)
+  void audioDbStore.removeItem(item.name)
   // setTimeout(()=>{
   //     localMusicListValue.value=localMusicList
   // },100)
 }
 function resetMusic() {
   globalConfig.resetMusicList()
-  audioDbStore.clear()
+  void audioDbStore.clear()
 }
 function deleteAll() {
   globalConfig.clearMusicList()
-  audioDbStore.clear()
+  void audioDbStore.clear()
 }
 async function getMusicDbStore() {
   const keys = await audioDbStore.keys()
+  const existingStorageKeys = new Set(
+    localMusicList.value.filter(item => item.url === 'Storage').map(item => item.name),
+  )
   if (keys.length > 0) {
     audioDbStore.iterate((value: string, key: string) => {
+      if (existingStorageKeys.has(key)) {
+        return
+      }
       globalConfig.addMusic({
-        id: key + new Date().getTime().toString(),
+        id: key,
         name: key,
         url: 'Storage',
       })
@@ -50,30 +58,67 @@ async function getMusicDbStore() {
   }
 }
 async function handleFileChange(e: Event) {
-  const isAudio = /audio*/.test(((e.target as HTMLInputElement).files as FileList)[0].type)
-  if (!isAudio) {
-    audioUploadToast.value = 3
-
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) {
     return
   }
-  const { dataUrl, fileName } = await readFileData(((e.target as HTMLInputElement).files as FileList)[0])
-  audioDbStore.setItem(`${new Date().getTime().toString()}+${fileName}`, dataUrl)
-    .then(() => {
-      audioUploadToast.value = 1
-      getMusicDbStore()
-    })
-    .catch(() => {
-      audioUploadToast.value = 2
-    })
+  if (!file.type.startsWith('audio/')) {
+    audioUploadToast.value = 3
+    input.value = ''
+    return
+  }
+  if (file.size > maxAudioFileSize) {
+    audioUploadToast.value = 4
+    input.value = ''
+    return
+  }
+
+  try {
+    const { dataUrl, fileName } = await readFileData(file)
+    await audioDbStore.setItem(`${new Date().getTime().toString()}+${fileName}`, dataUrl)
+    audioUploadToast.value = 1
+    await getMusicDbStore()
+  }
+  catch (error) {
+    console.error('Failed to store audio', error)
+    audioUploadToast.value = 2
+  }
+  finally {
+    input.value = ''
+  }
 }
 
 onMounted(() => {
-  getMusicDbStore()
+  void getMusicDbStore()
 })
+watch(audioUploadToast, (value) => {
+  if (value !== 0) {
+    clearTimeout(toastTimer)
+    toastTimer = setTimeout(() => {
+      audioUploadToast.value = 0
+    }, 2000)
+  }
+})
+onUnmounted(() => clearTimeout(toastTimer))
 </script>
 
 <template>
   <div>
+    <div class="toast toast-top toast-end">
+      <div v-if="audioUploadToast === 2" class="alert alert-error">
+        <span>{{ t('error.uploadFail') }}</span>
+      </div>
+      <div v-if="audioUploadToast === 1" class="alert alert-success">
+        <span>{{ t('error.uploadSuccess') }}</span>
+      </div>
+      <div v-if="audioUploadToast === 3" class="alert alert-error">
+        <span>{{ t('error.notAudio') }}</span>
+      </div>
+      <div v-if="audioUploadToast === 4" class="alert alert-error">
+        <span>{{ t('error.fileTooLarge', { size: 50 }) }}</span>
+      </div>
+    </div>
     <div class="flex gap-3">
       <button class="btn btn-primary btn-sm" @click="resetMusic">
         {{ t('button.reset') }}

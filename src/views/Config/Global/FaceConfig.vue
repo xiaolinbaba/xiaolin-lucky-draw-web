@@ -1,15 +1,16 @@
 <script setup lang='ts'>
-import i18n, { languageList } from '@/locales/i18n'
-
-import useStore from '@/store'
-import { themeChange } from '@/utils'
-import { isHex, isRgbOrRgba } from '@/utils/color'
 import daisyuiThemes from 'daisyui/src/theming/themes'
+
+import localforage from 'localforage'
 import { storeToRefs } from 'pinia'
 import { onMounted, ref, watch } from 'vue'
 import { ColorPicker } from 'vue3-colorpicker'
 import { useI18n } from 'vue-i18n'
 import zod from 'zod'
+import i18n, { languageList } from '@/locales/i18n'
+import useStore from '@/store'
+import { themeChange } from '@/utils'
+import { isHex, isRgbOrRgba } from '@/utils/color'
 import PatternSetting from './components/PatternSetting.vue'
 import 'vue3-colorpicker/style.css'
 
@@ -90,10 +91,14 @@ function resetPattern() {
   globalConfig.resetPatternList()
 }
 
-function resetData() {
+async function resetData() {
   globalConfig.reset()
   personConfig.reset()
   prizeConfig.resetDefault()
+  await Promise.allSettled([
+    localforage.createInstance({ name: 'imgStore' }).clear(),
+    localforage.createInstance({ name: 'audioStore' }).clear(),
+  ])
   // 同时清理持久化缓存，避免旧数据在 reload 后被重新 hydrate
   localStorage.removeItem('globalConfig')
   localStorage.removeItem('personConfig')
@@ -323,6 +328,7 @@ onMounted(() => {
           <PatternSetting
             :row-count="rowCount" :card-color="cardColor" :pattern-color="patternColor"
             :pattern-list="patternList"
+            @update:pattern-list="globalConfig.setPatternList"
           />
         </div>
       </div>
