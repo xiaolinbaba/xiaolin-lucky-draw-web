@@ -18,6 +18,15 @@
         @apply mx-auto w-full max-w-[1280px];
     }
 
+    .config-content-panel {
+        @apply min-w-0;
+    }
+
+    .config-content-panel > * {
+        width: 100%;
+        min-width: 0;
+    }
+
     .config-toolbar {
         @apply flex flex-wrap items-center gap-2 rounded-lg border border-base-content/10 bg-base-200/60 p-2.5 sm:p-3;
     }
@@ -88,6 +97,34 @@
         color: #1f2328 !important;
         background-color: rgba(175, 184, 193, 0.2) !important;
     }
+}
+
+.config-scroll-container {
+    color-scheme: light;
+    scrollbar-color: #9ca3af #f1f3f5;
+    scrollbar-gutter: stable;
+}
+
+.config-scroll-container::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+    background: #f1f3f5;
+}
+
+.config-scroll-container::-webkit-scrollbar-track {
+    background: #f1f3f5;
+}
+
+.config-scroll-container::-webkit-scrollbar-thumb {
+    border: 2px solid #f1f3f5;
+    border-radius: 999px;
+    background: #9ca3af;
+    background-clip: padding-box;
+}
+
+.config-scroll-container::-webkit-scrollbar-thumb:hover {
+    background: #7f8792;
+    background-clip: padding-box;
 }
 
 body,

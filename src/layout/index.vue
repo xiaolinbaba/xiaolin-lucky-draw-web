@@ -1,17 +1,9 @@
 <script setup lang="ts">
-import { useScroll } from '@vueuse/core'
-// import Header from './Header/index.vue';
-// import Footer from './Footer/index.vue';
-import { ref } from 'vue'
-import ToTop from '@/components/ToTop/index.vue'
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 
-const mainContainer = ref<HTMLElement | null>(null)
-
-const { y } = useScroll(mainContainer)
-
-function scrollToTop() {
-  y.value = 0
-}
+const route = useRoute()
+const isConfigRoute = computed(() => route.path.startsWith('/config'))
 </script>
 
 <template>
@@ -19,8 +11,11 @@ function scrollToTop() {
     <!-- <header class="shadow-2xl head-container h-14">
       <Header></Header>
     </header> -->
-    <ToTop v-if="y > 400" @click="scrollToTop" />
-    <main ref="mainContainer" class="box-border h-[100dvh] w-screen overflow-x-hidden overflow-y-auto main-container">
+    <main
+      :data-theme="isConfigRoute ? 'light' : undefined"
+      class="box-border h-[100dvh] w-screen overflow-x-hidden overflow-y-auto main-container"
+      :class="{ 'config-scroll-container': isConfigRoute }"
+    >
       <router-view class="min-h-full main-container-content" />
     </main>
     <!-- <footer class="w-screen footer-container">

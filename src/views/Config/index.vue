@@ -31,7 +31,7 @@ function handleMobileNavigation(event: Event) {
         :aria-label="t('admin.navigation')"
       >
         <button
-          class="flex h-16 appearance-none items-center gap-3 border-x-0 border-t-0 border-b border-base-content/10 bg-transparent px-5 text-left text-inherit transition-colors hover:bg-base-200/60"
+          class="flex h-20 appearance-none items-center gap-3 border-x-0 border-t-0 border-b border-base-content/10 bg-transparent px-5 text-left text-inherit transition-colors hover:bg-base-200/60"
           type="button"
           @click="skip('/home')"
         >
@@ -64,8 +64,8 @@ function handleMobileNavigation(event: Event) {
       </aside>
 
       <div class="flex min-w-0 flex-1 flex-col">
-        <header class="border-b border-base-content/10 bg-base-100 px-4 sm:px-6 lg:px-8">
-          <div class="config-frame py-3 md:min-h-[82px]">
+        <header class="border-b border-base-content/10 bg-base-100 px-4 sm:px-6 md:h-20 lg:px-8">
+          <div class="config-frame py-3 md:h-full">
             <label class="mb-3 block md:hidden">
               <span class="mb-2 block text-xs font-semibold text-base-content/60">{{ t('admin.navigation') }}</span>
               <select class="select select-bordered select-sm w-full" :value="route.path" @change="handleMobileNavigation">
@@ -84,7 +84,7 @@ function handleMobileNavigation(event: Event) {
         </header>
 
         <main class="flex-1 px-4 pt-4 pb-20 sm:px-6 md:pb-5 lg:px-8 lg:pt-5">
-          <div class="config-frame rounded-xl border border-base-content/10 bg-base-100 p-3 shadow-sm sm:p-4 lg:p-5">
+          <div class="config-frame config-content-panel rounded-xl border border-base-content/10 bg-base-100 p-3 shadow-sm sm:p-4 lg:p-5">
             <router-view />
           </div>
         </main>
