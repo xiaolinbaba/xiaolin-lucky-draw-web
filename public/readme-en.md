@@ -37,4 +37,4 @@ This project uses a random algorithm for lottery drawing to ensure fairness:
 - **Dynamic Participant Pool**: The pool dynamically shrinks after each draw, ensuring fairness in subsequent draws
 - **Batch Drawing Support**: Supports dividing prizes into multiple batches for flexible configuration
 
-Open Source Code: [https://github.com/xiaolinbaba/luck](https://github.com/xiaolinbaba/luck)
+Open Source Code: [https://github.com/xiaolinbaba/xiaolin-lucky-draw-web](https://github.com/xiaolinbaba/xiaolin-lucky-draw-web)

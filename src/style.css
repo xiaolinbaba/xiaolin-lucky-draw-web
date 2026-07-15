@@ -97,6 +97,31 @@
         color: #1f2328 !important;
         background-color: rgba(175, 184, 193, 0.2) !important;
     }
+
+    .config-shell[data-theme="light"] .markdown-body table {
+        background-color: #ffffff !important;
+    }
+
+    .config-shell[data-theme="light"] .markdown-body table tr {
+        border-top-color: #d0d7de !important;
+        background-color: #ffffff !important;
+    }
+
+    .config-shell[data-theme="light"] .markdown-body table tr:nth-child(2n) {
+        background-color: #f6f8fa !important;
+    }
+
+    .config-shell[data-theme="light"] .markdown-body table th,
+    .config-shell[data-theme="light"] .markdown-body table td {
+        border-color: #d0d7de !important;
+        color: #1f2328 !important;
+        background-color: transparent !important;
+    }
+
+    .config-shell[data-theme="light"] .markdown-body table th {
+        background-color: #f6f8fa !important;
+        font-weight: 600;
+    }
 }
 
 .config-scroll-container {

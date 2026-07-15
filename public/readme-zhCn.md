@@ -37,4 +37,4 @@
 - **动态人员池**：每次抽取后人员池动态缩小，保证后续抽取的公平性
 - **支持分批抽取**：支持将奖项分成多批进行抽取，灵活配置
 
-代码开源地址：[https://github.com/xiaolinbaba/luck](https://github.com/xiaolinbaba/luck)
+代码开源地址：[https://github.com/xiaolinbaba/xiaolin-lucky-draw-web](https://github.com/xiaolinbaba/xiaolin-lucky-draw-web)

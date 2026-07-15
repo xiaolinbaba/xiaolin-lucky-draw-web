@@ -191,17 +191,14 @@ watch(languageValue, (val) => {
       </div>
     </dialog>
 
-    <div class="config-toolbar justify-end">
-      <button class="btn btn-error btn-outline btn-sm" @click="resetDataDialogRef.showModal()">
-        {{ t('button.resetAllData') }}
-      </button>
-    </div>
-
     <section class="config-section">
       <header class="config-section-header">
         <h2 class="config-section-title">
           {{ t('admin.section.basicSettings') }}
         </h2>
+        <button class="btn btn-error btn-outline btn-sm" @click="resetDataDialogRef.showModal()">
+          {{ t('button.resetAllData') }}
+        </button>
       </header>
       <div class="config-section-body config-form-grid">
         <label class="config-field">
