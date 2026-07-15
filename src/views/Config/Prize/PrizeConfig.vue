@@ -225,7 +225,7 @@ watch(() => prizeList.value, (val: IPrizeConfig[]) => {
 
           <div class="config-field">
             <span class="label"><span class="label-text">{{ t('table.fullParticipation') }}</span></span>
-            <label class="flex min-h-12 cursor-pointer items-center justify-between rounded-lg border border-base-content/10 px-4">
+            <label class="flex min-h-10 cursor-pointer items-center justify-between rounded-lg border border-base-content/10 px-3">
               <span class="text-sm text-base-content/65">{{ item.isAll ? t('data.yes') : t('data.no') }}</span>
               <input type="checkbox" :checked="item.isAll" class="toggle toggle-secondary" @change="item.isAll = !item.isAll">
             </label>
@@ -233,7 +233,7 @@ watch(() => prizeList.value, (val: IPrizeConfig[]) => {
 
           <div class="config-field">
             <span class="label"><span class="label-text">{{ t('table.isDone') }}</span></span>
-            <label class="flex min-h-12 cursor-pointer items-center justify-between rounded-lg border border-base-content/10 px-4">
+            <label class="flex min-h-10 cursor-pointer items-center justify-between rounded-lg border border-base-content/10 px-3">
               <span class="text-sm text-base-content/65">{{ item.isUsed ? t('data.yes') : t('data.no') }}</span>
               <input type="checkbox" :checked="item.isUsed" class="toggle toggle-secondary" @change="changePrizeStatus(item)">
             </label>
@@ -241,7 +241,7 @@ watch(() => prizeList.value, (val: IPrizeConfig[]) => {
 
           <div v-if="item.separateCount" class="config-field md:col-span-2 xl:col-span-1">
             <span class="label"><span class="label-text">{{ t('table.onceNumber') }}</span></span>
-            <button class="btn min-h-12 h-auto justify-start border-base-content/15 bg-base-100 px-3 py-2 font-normal" @click="selectPrize(item)">
+            <button class="btn min-h-10 h-auto justify-start border-base-content/15 bg-base-100 px-3 py-1.5 font-normal" @click="selectPrize(item)">
               <span v-if="item.separateCount.countList.length" class="flex flex-wrap gap-2">
                 <span v-for="se in item.separateCount.countList" :key="se.id" class="badge badge-outline gap-1 whitespace-nowrap">
                   <strong>{{ se.count }}</strong>

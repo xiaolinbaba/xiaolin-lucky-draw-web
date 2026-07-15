@@ -163,7 +163,7 @@ watch(isShowPrizeListValue, () => {
 watch(backgroundImageValue, (val) => {
   globalConfig.setBackground(val)
 })
-watch(languageValue, (val: string) => {
+watch(languageValue, (val) => {
   globalConfig.setLanguage(val)
 })
 </script>
@@ -296,7 +296,7 @@ watch(languageValue, (val: string) => {
           </span>
         </div>
       </header>
-      <div class="config-section-body space-y-5">
+      <div class="config-section-body space-y-3">
         <label class="config-field max-w-xs">
           <span class="label"><span class="label-text">{{ t('table.highlightColor') }}</span></span>
           <ColorPicker v-model="patternColorValue" v-model:pure-color="patternColorValue" />

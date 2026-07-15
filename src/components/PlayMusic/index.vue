@@ -132,7 +132,7 @@ watch(currentMusic, (val: any) => {
 
 <template>
   <div
-    ref="settingRef" class="fixed z-30 flex gap-2"
+    ref="settingRef" :data-theme="isConfigRoute ? 'light' : undefined" class="fixed z-30 flex gap-2"
     :class="isConfigRoute ? 'bottom-20 right-4 flex-row rounded-xl border border-base-content/10 bg-base-100/90 p-1 shadow-lg md:bottom-auto md:top-5' : 'bottom-1/2 right-0 flex-col'"
   >
     <div v-if="isConfigRoute" class="tooltip tooltip-top" :data-tip="t('tooltip.toHome')">

@@ -1,6 +1,7 @@
 import type { IImage, IMusic } from '@/types/storeType'
 import { defineStore } from 'pinia'
-import i18n, { browserLanguage } from '@/locales/i18n'
+import { DEFAULT_TOP_TITLE } from '@/constants/app'
+import i18n, { browserLanguage, type Language } from '@/locales/i18n'
 import { defaultImageList, defaultMusicList, defaultPatternList } from './data'
 // import { IPrizeConfig } from '@/types/storeType';
 
@@ -16,7 +17,7 @@ function createDefaultGlobalConfig() {
       rowCount: 17,
       isSHowPrizeList: true,
       isShowAvatar: false,
-      topTitle: i18n.global.t('data.defaultTitle'),
+      topTitle: DEFAULT_TOP_TITLE,
       language: browserLanguage,
       theme: {
         name: 'dracula',
@@ -234,7 +235,7 @@ export const useGlobalConfig = defineStore('global', {
       this.globalConfig.isSHowPrizeList = isShowPrizeList
     },
     // 设置
-    setLanguage(language: string) {
+    setLanguage(language: Language) {
       this.globalConfig.language = language
       i18n.global.locale.value = language
     },

@@ -11,19 +11,23 @@
     }
 
     .config-page {
-        @apply flex min-w-0 flex-col gap-6;
+        @apply flex min-w-0 flex-col gap-4;
+    }
+
+    .config-frame {
+        @apply mx-auto w-full max-w-[1280px];
     }
 
     .config-toolbar {
-        @apply flex flex-wrap items-center gap-2 rounded-xl border border-base-content/10 bg-base-200/50 p-3 sm:p-4;
+        @apply flex flex-wrap items-center gap-2 rounded-lg border border-base-content/10 bg-base-200/60 p-2.5 sm:p-3;
     }
 
     .config-section {
-        @apply overflow-hidden rounded-xl border border-base-content/10 bg-base-100;
+        @apply overflow-hidden rounded-lg border border-base-content/10 bg-base-100;
     }
 
     .config-section-header {
-        @apply flex flex-wrap items-center justify-between gap-3 border-b border-base-content/10 bg-base-200/30 px-4 py-3 sm:px-5;
+        @apply flex flex-wrap items-center justify-between gap-2 border-b border-base-content/10 bg-base-200/40 px-3.5 py-2.5 sm:px-4;
     }
 
     .config-section-title {
@@ -31,11 +35,11 @@
     }
 
     .config-section-body {
-        @apply p-4 sm:p-5;
+        @apply p-3.5 sm:p-4;
     }
 
     .config-form-grid {
-        @apply grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2 xl:grid-cols-3;
+        @apply grid grid-cols-1 gap-x-4 gap-y-3 md:grid-cols-2 xl:grid-cols-3;
     }
 
     .config-field {
@@ -43,15 +47,46 @@
     }
 
     .config-field > .label {
-        @apply min-h-8 px-0 py-1;
+        @apply min-h-6 px-0 py-0.5;
     }
 
     .config-list-row {
-        @apply flex flex-col gap-3 border-b border-base-content/10 px-4 py-4 last:border-b-0 sm:flex-row sm:items-center sm:justify-between sm:px-5;
+        @apply flex flex-col gap-2 border-b border-base-content/10 px-3.5 py-3 last:border-b-0 sm:flex-row sm:items-center sm:justify-between sm:px-4;
     }
 
     .config-empty {
-        @apply flex min-h-40 items-center justify-center px-4 py-10 text-center text-sm text-base-content/55;
+        @apply flex min-h-32 items-center justify-center px-4 py-8 text-center text-sm text-base-content/55;
+    }
+
+    .config-shell .input:not(.input-sm),
+    .config-shell .select:not(.select-sm) {
+        height: 2.5rem;
+        min-height: 2.5rem;
+    }
+
+    .config-shell[data-theme="light"] .markdown-body,
+    .config-shell[data-theme="light"] .markdown-body p,
+    .config-shell[data-theme="light"] .markdown-body li,
+    .config-shell[data-theme="light"] .markdown-body td,
+    .config-shell[data-theme="light"] .markdown-body th,
+    .config-shell[data-theme="light"] .markdown-body div,
+    .config-shell[data-theme="light"] .markdown-body span,
+    .config-shell[data-theme="light"] .markdown-body h1,
+    .config-shell[data-theme="light"] .markdown-body h2,
+    .config-shell[data-theme="light"] .markdown-body h3,
+    .config-shell[data-theme="light"] .markdown-body h4,
+    .config-shell[data-theme="light"] .markdown-body h5,
+    .config-shell[data-theme="light"] .markdown-body h6 {
+        color: #1f2328 !important;
+    }
+
+    .config-shell[data-theme="light"] .markdown-body a {
+        color: #0969da !important;
+    }
+
+    .config-shell[data-theme="light"] .markdown-body code {
+        color: #1f2328 !important;
+        background-color: rgba(175, 184, 193, 0.2) !important;
     }
 }
 

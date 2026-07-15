@@ -173,7 +173,7 @@ export default {
     operation: 'Operation',
     delete: 'Delete',
     removePerson: 'Remove the Person',
-    defaultTitle: 'The Prelude to the Six Ministries of the Ming Dynasty Cabinet',
+    defaultTitle: '火星工程集团 - 幸运大抽奖',
     xlsxName: 'personListTemplate-en.xlsx',
     readmeName: 'readme-en.md',
   },
