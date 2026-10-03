@@ -755,9 +755,18 @@ onUnmounted(() => {
   <div id="container" ref="containerRef" class="3dContainer">
     <!-- 选中菜单结构 start -->
     <div id="menu">
-      <button v-if="currentStatus === 0 && tableData.length > 0" class="btn-end btn-enter" :disabled="!canOperate" @click="enterLottery">
-        {{ t('button.enterLottery') }}
-      </button>
+      <div v-if="currentStatus === 0 && tableData.length > 0" class="start">
+        <button class="btn-start btn-enter" :disabled="!canOperate" @click="enterLottery">
+          <strong>{{ t('button.enterLottery') }}</strong>
+          <div id="container-stars">
+            <div id="stars" />
+          </div>
+          <div id="glow">
+            <div class="circle" />
+            <div class="circle" />
+          </div>
+        </button>
+      </div>
 
       <button v-if="currentStatus === 4" class="btn btn-primary gap-2" disabled aria-busy="true">
         <span class="loading loading-spinner loading-sm" />
@@ -778,9 +787,18 @@ onUnmounted(() => {
         </button>
       </div>
 
-      <button v-if="currentStatus === 2" class="btn-end btn glass btn-lg" @click="stopLottery">
-        {{ t('button.selectLucky') }}
-      </button>
+      <div v-if="currentStatus === 2" class="start">
+        <button class="btn-start btn-draw" @click="stopLottery">
+          <strong>{{ t('button.selectLucky') }}</strong>
+          <div id="container-stars">
+            <div id="stars" />
+          </div>
+          <div id="glow">
+            <div class="circle" />
+            <div class="circle" />
+          </div>
+        </button>
+      </div>
 
       <div v-if="currentStatus === 3" class="flex justify-center gap-6 enStop">
         <div class="start">
@@ -1029,83 +1047,6 @@ strong {
         transform: scale(0.75);
         box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
     }
-}
-
-.btn-end {
-    -webkit-animation: pulsate-fwd 0.9s ease-in-out infinite both;
-    animation: pulsate-fwd 0.9s ease-in-out infinite both;
-    cursor: pointer;
-}
-
-.btn-end {
-    --glow-color: rgb(217, 176, 255);
-    --glow-spread-color: rgba(191, 123, 255, 0.781);
-    --enhanced-glow-color: rgb(231, 206, 255);
-    --btn-color: rgb(100, 61, 136);
-    border: .25em solid var(--glow-color);
-    padding: 1em 3em;
-    color: var(--glow-color);
-    font-size: 15px;
-    font-weight: bold;
-    background-color: var(--btn-color);
-    border-radius: 1em;
-    outline: none;
-    box-shadow: 0 0 1em .25em var(--glow-color),
-        0 0 4em 1em var(--glow-spread-color),
-        inset 0 0 .75em .25em var(--glow-color);
-    text-shadow: 0 0 .5em var(--glow-color);
-    position: relative;
-    transition: all 0.3s;
-    -webkit-animation: swing-in-top-fwd 0.5s cubic-bezier(0.175, 0.885, 0.320, 1.275) both;
-    animation: swing-in-top-fwd 0.5s cubic-bezier(0.175, 0.885, 0.320, 1.275) both;
-}
-
-.btn-end::after {
-    pointer-events: none;
-    content: "";
-    position: absolute;
-    top: 120%;
-    left: 0;
-    height: 100%;
-    width: 100%;
-    background-color: var(--glow-spread-color);
-    filter: blur(2em);
-    opacity: .7;
-    transform: perspective(1.5em) rotateX(35deg) scale(1, .6);
-}
-
-.btn-end:hover {
-    color: var(--btn-color);
-    background-color: var(--glow-color);
-    box-shadow: 0 0 1em .25em var(--glow-color),
-        0 0 4em 2em var(--glow-spread-color),
-        inset 0 0 .75em .25em var(--glow-color);
-}
-
-.btn-end:active {
-    box-shadow: 0 0 0.6em .25em var(--glow-color),
-        0 0 2.5em 2em var(--glow-spread-color),
-        inset 0 0 .5em .25em var(--glow-color);
-}
-
-.btn-enter {
-    border-width: 2px;
-    padding: 0.9em 2.4em;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
-    text-shadow: none;
-    transition: background-color 0.15s, box-shadow 0.15s;
-}
-
-.btn-enter::after {
-    content: none;
-}
-
-.btn-enter:hover {
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.22);
-}
-
-.btn-enter:active {
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
 }
 
 // 按钮动画

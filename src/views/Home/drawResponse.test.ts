@@ -34,7 +34,7 @@ describe('draw result responsiveness', () => {
     await wrapper.find('.btn-enter').trigger('click')
     await vi.advanceTimersByTimeAsync(2200)
     await wrapper.find('.btn-start').trigger('click')
-    await wrapper.find('#menu > .btn-end').trigger('click')
+    await wrapper.find('.btn-draw').trigger('click')
     await vi.advanceTimersByTimeAsync(1250)
     expect(wrapper.find('.enStop').exists()).toBe(true)
     return { wrapper, stores }
