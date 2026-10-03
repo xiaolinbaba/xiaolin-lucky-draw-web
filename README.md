@@ -57,17 +57,6 @@ pnpm build
 
 ## 部署
 
-### Docker / Nginx
-
-容器与标准构建统一使用根路径 `/`，支持管理页面和首页的 History 路由回退。
-
-```bash
-docker build -t luck .
-docker run --rm -p 8080:80 luck
-```
-
-浏览器打开 `http://localhost:8080`。容器只托管静态资源；活动数据存储在访问者浏览器中。
-
 ### Cloudflare Workers Static Assets
 
 项目使用 `wrangler.jsonc` 将 Vite 的 `dist` 目录作为 Workers Static Assets 部署，并为 Vue Router 启用了 SPA fallback。Wrangler 已作为项目开发依赖安装，无需全局安装。
@@ -144,6 +133,19 @@ SheetJS 依赖按官方建议固定在 `vendor/xlsx-0.20.3.tgz`，避免部署�
 - 确认 API 地址配置正确
 - 考虑使用 Cloudflare Workers 作为 API 代理
 
+
+### 可选：Docker / Nginx
+
+当前项目部署在 Cloudflare，不需要 Docker。以下仅用于其他服务器上的容器部署。
+
+容器与标准构建统一使用根路径 `/`，支持管理页面和首页的 History 路由回退。
+
+```bash
+docker build -t luck .
+docker run --rm -p 8080:80 luck
+```
+
+浏览器打开 `http://localhost:8080`。容器只托管静态资源；活动数据存储在访问者浏览器中。
 
 ## 项目结构
 

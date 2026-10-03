@@ -1,5 +1,6 @@
 export default {
   button: {
+    preparingLottery: 'Preparing…',
     enterLottery: 'Enter Lottery',
     start: 'Start',
     selectLucky: 'Draw the Lucky',

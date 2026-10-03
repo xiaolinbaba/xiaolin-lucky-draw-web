@@ -1,5 +1,6 @@
 export default {
   button: {
+    preparingLottery: '正在准备…',
     enterLottery: '进入抽奖',
     start: '开始',
     selectLucky: '抽取幸运儿',

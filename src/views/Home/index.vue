@@ -35,7 +35,7 @@ const { getAllPersonList: allPersonList, getNotPersonList: notPersonList, getNot
 const { getCurrentPrize: currentPrize } = storeToRefs(prizeConfig)
 const { getTopTitle: topTitle, getCardColor: cardColor, getPatterColor: patternColor, getPatternList: patternList, getTextColor: textColor, getLuckyColor: luckyColor, getCardSize: cardSize, getTextSize: textSize, getRowCount: rowCount, getBackground: homeBackground, getIsShowAvatar: isShowAvatar } = storeToRefs(globalConfig)
 const tableData = ref<any[]>([])
-const currentStatus = ref(0) // 0为初始状态， 1为抽奖准备状态，2为抽奖中状态，3为抽奖结束状态
+const currentStatus = ref(0) // 0初始，1准备，2抽奖中，3结果，4回位中
 const ballRotationY = ref(0)
 const containerRef = ref<HTMLElement>()
 const canOperate = ref(true)
@@ -237,6 +237,13 @@ function init() {
 
 function transform(targets: any[], duration: number) {
   TWEEN.removeAll()
+  // Restore winner card styles once, rather than from every card's callback.
+  for (const cardIndex of luckyCardList.value) {
+    const item = objects.value[cardIndex]
+    useElementStyle(item.element, {} as IPersonConfig, cardIndex, patternList.value, patternColor.value, cardColor.value, cardSize.value, textSize.value, 'sphere')
+  }
+  luckyTargets.value = []
+  luckyCardList.value = []
   if (intervalTimer.value) {
     clearInterval(intervalTimer.value)
     intervalTimer.value = null
@@ -257,18 +264,6 @@ function transform(targets: any[], duration: number) {
         .to({ x: target.rotation.x, y: target.rotation.y, z: target.rotation.z }, Math.random() * duration + duration)
         .easing(TWEEN.Easing.Exponential.InOut)
         .start()
-        .onComplete(() => {
-          if (luckyCardList.value.length) {
-            luckyCardList.value.forEach((cardIndex: any) => {
-              const item = objects.value[cardIndex]
-              useElementStyle(item.element, {} as any, i, patternList.value, patternColor.value, cardColor.value, cardSize.value, textSize.value, 'sphere')
-            })
-          }
-          luckyTargets.value = []
-          luckyCardList.value = []
-
-          canOperate.value = true
-        })
     }
 
     // Wait for all position/rotation transitions; rendering happens once per frame.
@@ -276,7 +271,6 @@ function transform(targets: any[], duration: number) {
       .to({}, duration * 2)
       .start()
       .onComplete(() => {
-        canOperate.value = true
         resolve('')
       })
   })
@@ -358,7 +352,6 @@ function resetCamera() {
         )
         .start()
         .onComplete(() => {
-          canOperate.value = true
           // camera.value.lookAt(scene.value.position)
           camera.value.position.y = 0
           camera.value.position.x = 0
@@ -380,6 +373,13 @@ async function enterLottery() {
   if (!canOperate.value || objects.value.length === 0) {
     return
   }
+  await prepareLottery(1000)
+}
+
+async function prepareLottery(duration: number) {
+  canOperate.value = false
+  currentStatus.value = 4
+  stopConfetti()
   if (!intervalTimer.value) {
     randomBallData()
   }
@@ -390,12 +390,12 @@ async function enterLottery() {
       }
     }
   }
-  canOperate.value = false
-  await transform(targets.sphere, 1000)
+  await transform(targets.sphere, duration)
   if (disposed) {
     return
   }
   currentStatus.value = 1
+  canOperate.value = true
   rollBall(0.1, 2000)
 }
 // 开始抽奖
@@ -489,8 +489,8 @@ async function stopLottery() {
       .easing(TWEEN.Easing.Exponential.InOut)
       .start()
       .onComplete(() => {
-        confettiFire()
         if (index === luckyTargets.value.length - 1) {
+          confettiFire()
           resetCamera()
         }
       })
@@ -498,9 +498,11 @@ async function stopLottery() {
 }
 // 继续
 async function continueLottery() {
-  if (!canOperate.value) {
+  if (!canOperate.value || currentStatus.value !== 3) {
     return
   }
+  canOperate.value = false
+  currentStatus.value = 4
 
   const customCount = currentPrize.value.separateCount
   if (customCount && customCount.enable && customCount.countList.length > 0) {
@@ -519,11 +521,17 @@ async function continueLottery() {
   }
   personConfig.addAlreadyPersonList(luckyTargets.value, currentPrize.value)
   prizeConfig.updatePrizeConfig(currentPrize.value)
-  await enterLottery()
+  await prepareLottery(350)
 }
 function quitLottery() {
-  enterLottery()
-  currentStatus.value = 0
+  if (!canOperate.value || currentStatus.value !== 3)
+    return
+  void prepareLottery(350)
+}
+function stopConfetti() {
+  confettiFrameIds.forEach(frameId => cancelAnimationFrame(frameId))
+  confettiFrameIds.clear()
+  confetti.reset()
 }
 // 庆祝动画
 function confettiFire() {
@@ -650,8 +658,7 @@ function listenKeyboard(e: any) {
 
 function cleanup() {
   disposed = true
-  confettiFrameIds.forEach(frameId => cancelAnimationFrame(frameId))
-  confettiFrameIds.clear()
+  stopConfetti()
   // 停止所有Tween动画
   TWEEN.removeAll()
 
@@ -704,7 +711,6 @@ function cleanup() {
   camera.value = null
   renderer.value = null
   controls.value = null
-  confetti.reset()
 }
 onMounted(() => {
   initTableData()
@@ -749,8 +755,13 @@ onUnmounted(() => {
   <div id="container" ref="containerRef" class="3dContainer">
     <!-- 选中菜单结构 start -->
     <div id="menu">
-      <button v-if="currentStatus === 0 && tableData.length > 0" class="btn-end " @click="enterLottery">
+      <button v-if="currentStatus === 0 && tableData.length > 0" class="btn-end btn-enter" :disabled="!canOperate" @click="enterLottery">
         {{ t('button.enterLottery') }}
+      </button>
+
+      <button v-if="currentStatus === 4" class="btn btn-primary gap-2" disabled aria-busy="true">
+        <span class="loading loading-spinner loading-sm" />
+        {{ t('button.preparingLottery') }}
       </button>
 
       <div v-if="currentStatus === 1" class="start">
@@ -1075,6 +1086,26 @@ strong {
     box-shadow: 0 0 0.6em .25em var(--glow-color),
         0 0 2.5em 2em var(--glow-spread-color),
         inset 0 0 .5em .25em var(--glow-color);
+}
+
+.btn-enter {
+    border-width: 2px;
+    padding: 0.9em 2.4em;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+    text-shadow: none;
+    transition: background-color 0.15s, box-shadow 0.15s;
+}
+
+.btn-enter::after {
+    content: none;
+}
+
+.btn-enter:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.22);
+}
+
+.btn-enter:active {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
 }
 
 // 按钮动画
