@@ -66,20 +66,16 @@ export const usePersonConfig = defineStore('person', {
       if (personList.length <= 0) {
         return
       }
+      const peopleById = new Map(this.personConfig.allPersonList.map(item => [item.id, item]))
+      const prizeTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
       personList.forEach((person: IPersonConfig) => {
-        this.personConfig.allPersonList.map((item: IPersonConfig) => {
-          if (item.id === person.id && prize != null) {
-            item.isWin = true
-            // person.isWin = true
-            item.prizeName.push(prize.name)
-            // person.prizeName += prize.name
-            item.prizeTime.push(dayjs(new Date()).format('YYYY-MM-DD HH:mm:ss'))
-            // person.prizeTime = new Date().toString()
-            item.prizeId.push(String(prize.id))
-          }
-
-          return item
-        })
+        const item = peopleById.get(person.id)
+        if (item && prize != null) {
+          item.isWin = true
+          item.prizeName.push(prize.name)
+          item.prizeTime.push(prizeTime)
+          item.prizeId.push(String(prize.id))
+        }
         this.personConfig.alreadyPersonList.push(person)
       })
     },

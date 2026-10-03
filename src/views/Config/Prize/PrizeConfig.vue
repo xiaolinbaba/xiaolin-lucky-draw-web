@@ -1,24 +1,19 @@
 <script setup lang='ts'>
 import type { IPrizeConfig } from '@/types/storeType'
-import localforage from 'localforage'
 import { storeToRefs } from 'pinia'
-import { onMounted, ref, watch } from 'vue'
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import EditSeparateDialog from '@/components/NumberSeparate/EditSeparateDialog.vue'
 import i18n from '@/locales/i18n'
 import useStore from '@/store'
 
 const { t } = useI18n()
-const imageDbStore = localforage.createInstance({
-  name: 'imgStore',
-})
 const prizeConfig = useStore().prizeConfig
 const globalConfig = useStore().globalConfig
 const { getPrizeConfig: localPrizeList, getCurrentPrize: currentPrize } = storeToRefs(prizeConfig)
 
 const { getImageList: localImageList } = storeToRefs(globalConfig)
 const prizeList = ref(localPrizeList)
-const imgList = ref<any[]>([])
 
 const selectedPrize = ref<IPrizeConfig | null>()
 
@@ -110,18 +105,6 @@ function resetDefault() {
   prizeConfig.resetDefault()
 }
 
-async function getImageDbStore() {
-  const keys = await imageDbStore.keys()
-  if (keys.length > 0) {
-    imageDbStore.iterate((value, key) => {
-      imgList.value.push({
-        key,
-        value,
-      })
-    })
-  }
-}
-
 function sort(item: IPrizeConfig, isUp: number) {
   const itemIndex = prizeList.value.indexOf(item)
   if (isUp === 1) {
@@ -139,12 +122,6 @@ function delItem(item: IPrizeConfig) {
 async function delAll() {
   await prizeConfig.deleteAllPrizeConfig()
 }
-onMounted(() => {
-  getImageDbStore()
-})
-watch(() => prizeList.value, (val: IPrizeConfig[]) => {
-  prizeConfig.setPrizeConfig(val)
-}, { deep: true })
 </script>
 
 <template>

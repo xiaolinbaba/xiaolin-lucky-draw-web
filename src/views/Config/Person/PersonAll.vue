@@ -60,9 +60,9 @@ async function handleFileChange(e: Event) {
     }
 
     const mappedData = excelData.map((row) => {
-      const newRow: Record<string, unknown> = {}
+      const newRow: Record<string, unknown> = Object.create(null)
       for (const [key, value] of Object.entries(row)) {
-        const mappedKey = fieldMapping[key] || key
+        const mappedKey = Object.hasOwn(fieldMapping, key) ? fieldMapping[key] : key
         newRow[mappedKey] = value
       }
       return {

@@ -32,12 +32,11 @@ interface PersistedGlobalStore {
 }
 
 function readPersistedGlobalConfig(): PersistedGlobalConfig {
-  const storedValue = localStorage.getItem('globalConfig')
-  if (!storedValue) {
-    return {}
-  }
-
   try {
+    const storedValue = localStorage.getItem('globalConfig')
+    if (!storedValue) {
+      return {}
+    }
     const persistedStore = JSON.parse(storedValue) as PersistedGlobalStore
     const globalConfig = persistedStore.globalConfig ?? {}
 

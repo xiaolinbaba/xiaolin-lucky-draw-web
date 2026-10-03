@@ -1,6 +1,5 @@
 import { createRouter, createWebHashHistory, createWebHistory } from 'vue-router'
 import Layout from '@/layout/index.vue'
-import Home from '@/views/Home/index.vue'
 
 const envMode = import.meta.env.MODE
 
@@ -100,7 +99,7 @@ const rootRoutes = [
       {
         path: '/home',
         name: 'Home',
-        component: Home,
+        component: () => import('@/views/Home/index.vue'),
       },
       {
         path: '/demo',

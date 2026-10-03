@@ -137,9 +137,6 @@ export default defineConfig(({ mode }) => {
             environment: 'jsdom',
             // include: ['**/__tests__/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
             // passWithNoTests: true,
-            transformMode: {
-                web: [/\.[jt]sx$/],
-            },
         },
     }
 })

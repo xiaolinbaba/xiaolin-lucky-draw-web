@@ -53,16 +53,14 @@ async function handleFileChange(e: Event) {
 async function getImageDbStore() {
   const keys = await imageDbStore.keys()
   const existingImageIds = new Set(localImageList.value.map(item => item.id))
-  if (keys.length > 0) {
-    imageDbStore.iterate((value, key) => {
-      if (existingImageIds.has(key)) {
-        return
-      }
-      globalConfig.addImage({
-        id: key,
-        name: key,
-        url: 'Storage',
-      })
+  for (const key of keys) {
+    if (existingImageIds.has(key)) {
+      continue
+    }
+    globalConfig.addImage({
+      id: key,
+      name: key,
+      url: 'Storage',
     })
   }
 }

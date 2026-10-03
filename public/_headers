@@ -1,5 +1,5 @@
 /*
-  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' 'unsafe-inline' https://umami.thus.chat; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://randomuser.me; media-src 'self' data: blob: https://to2026.xyz; connect-src 'self' https://umami.thus.chat; worker-src 'self' blob:; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' https://umami.thus.chat; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https://randomuser.me; media-src 'self' data: blob: https://to2026.xyz; connect-src 'self' https://umami.thus.chat; worker-src 'self' blob:; upgrade-insecure-requests
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), fullscreen=(self)
   Referrer-Policy: strict-origin-when-cross-origin
   Strict-Transport-Security: max-age=31536000

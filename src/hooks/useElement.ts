@@ -1,7 +1,7 @@
 import type { IPersonConfig } from '@/types/storeType'
 import { rgba } from '@/utils/color'
 
-export function useElementStyle(element: any, person: IPersonConfig, index: number, patternList: number[], patternColor: string, cardColor: string, cardSize: { width: number, height: number }, textSize: number, mod: 'default' | 'lucky' | 'sphere' = 'default', type: 'add' | 'change' = 'add') {
+export function useElementStyle(element: any, person: IPersonConfig, index: number, patternList: number[], patternColor: string, cardColor: string, cardSize: { width: number, height: number }, textSize: number, mod: 'default' | 'lucky' | 'sphere' = 'default', _type: 'add' | 'change' = 'add') {
   if (patternList.includes(index + 1) && mod === 'default') {
     element.style.backgroundColor = rgba(patternColor, Math.random() * 0.2 + 0.8)
   }
@@ -21,17 +21,16 @@ export function useElementStyle(element: any, person: IPersonConfig, index: numb
   else {
     element.className = 'element-card'
   }
-  if (type === 'add') {
-    element.addEventListener('mouseenter', (ev: MouseEvent) => {
-      const target = ev.target as HTMLElement
-      target.style.border = `1px solid ${rgba(cardColor, 0.75)}`
-      target.style.boxShadow = `0 0 12px ${rgba(cardColor, 0.75)}`
-    })
-    element.addEventListener('mouseleave', (ev: MouseEvent) => {
-      const target = ev.target as HTMLElement
-      target.style.border = `1px solid ${rgba(cardColor, 0.25)}`
-      target.style.boxShadow = `0 0 12px ${rgba(cardColor, 0.5)}`
-    })
+  // Replace handlers instead of accumulating listeners on every draw/style update.
+  element.onmouseenter = (ev: MouseEvent) => {
+    const target = ev.target as HTMLElement
+    target.style.border = `1px solid ${rgba(cardColor, 0.75)}`
+    target.style.boxShadow = `0 0 12px ${rgba(cardColor, 0.75)}`
+  }
+  element.onmouseleave = (ev: MouseEvent) => {
+    const target = ev.target as HTMLElement
+    target.style.border = `1px solid ${rgba(cardColor, 0.25)}`
+    target.style.boxShadow = `0 0 12px ${rgba(cardColor, 0.5)}`
   }
   element.children[0].style.fontSize = `${textSize * 0.5}px`
   if (person.uid) {
@@ -61,7 +60,7 @@ export function useElementStyle(element: any, person: IPersonConfig, index: numb
   }
 
   const avatarEl = element.children[3] as HTMLImageElement
-  if (person.avatar) {
+  if (person.avatar && avatarEl.style.display !== 'none') {
     avatarEl.src = person.avatar
   }
   return element

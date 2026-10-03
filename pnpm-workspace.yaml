@@ -11,3 +11,4 @@ allowBuilds:
 
 overrides:
   dompurify: ">=3.2.7"
+  lodash-es: "^4.17.24"

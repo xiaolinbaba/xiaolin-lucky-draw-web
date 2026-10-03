@@ -7,7 +7,7 @@ import { storeToRefs } from 'pinia'
 import { Object3D, PerspectiveCamera, Scene, Vector3 } from 'three'
 import { CSS3DObject, CSS3DRenderer } from 'three-css3d'
 import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls.js'
-import { onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useToast } from 'vue-toast-notification'
@@ -17,6 +17,7 @@ import i18n from '@/locales/i18n'
 import useStore from '@/store'
 import { filterData, selectCard } from '@/utils'
 import { rgba } from '@/utils/color'
+import { escapeHtml } from '@/utils/html'
 import { sampleWithoutReplacement } from '@/utils/random'
 import PrizeList from './PrizeList.vue'
 import 'vue-toast-notification/dist/theme-sugar.css'
@@ -40,11 +41,12 @@ const canOperate = ref(true)
 const cameraZ = ref(3000)
 const animationFrameId = ref<any>(null)
 
-const scene = ref()
-const camera = ref()
-const renderer = ref()
-const controls = ref()
-const objects = ref<any[]>([])
+// Three.js owns these mutable objects; avoid deep Vue proxies in every frame.
+const scene = shallowRef()
+const camera = shallowRef()
+const renderer = shallowRef()
+const controls = shallowRef()
+const objects = shallowRef<any[]>([])
 interface TargetType {
   grid: any[]
   helix: any[]
@@ -64,25 +66,18 @@ const luckyCount = ref(10)
 const personPool = ref<IPersonConfig[]>([])
 
 const intervalTimer = ref<any>(null)
+const confettiFrameIds = new Set<number>()
+let disposed = false
 // 填充数据，填满七行
 function initTableData() {
   if (allPersonList.value.length <= 0) {
     return
   }
   const totalCount = rowCount.value * 7
-  const originPersonData = JSON.parse(JSON.stringify(allPersonList.value))
-  const originPersonLength = originPersonData.length
-  if (originPersonLength < totalCount) {
-    const repeatCount = Math.ceil(totalCount / originPersonLength)
-    // 复制数据
-    for (let i = 0; i < repeatCount; i++) {
-      tableData.value = tableData.value.concat(JSON.parse(JSON.stringify(originPersonData)))
-    }
-  }
-  else {
-    tableData.value = originPersonData.slice(0, totalCount)
-  }
-  tableData.value = filterData(tableData.value.slice(0, totalCount), rowCount.value)
+  // Only copy the visible cards, even when the imported roster is very large.
+  tableData.value = filterData(Array.from({ length: totalCount }, (_, index) => ({
+    ...allPersonList.value[index % allPersonList.value.length],
+  })), rowCount.value)
 }
 function init() {
   const felidView = 40
@@ -151,7 +146,9 @@ function init() {
 
     const avatar = document.createElement('img')
     avatar.className = 'card-avatar'
-    avatar.src = tableData.value[i].avatar
+    if (isShowAvatar.value && tableData.value[i].avatar) {
+      avatar.src = tableData.value[i].avatar
+    }
     avatar.alt = 'avatar'
     avatar.style.width = '140px'
     avatar.style.height = '140px'
@@ -273,10 +270,9 @@ function transform(targets: any[], duration: number) {
         })
     }
 
-    // 这个补间用来在位置与旋转补间同步执行，通过onUpdate在每次更新数据后渲染scene和camera
+    // Wait for all position/rotation transitions; rendering happens once per frame.
     new TWEEN.Tween({})
       .to({}, duration * 2)
-      .onUpdate(render)
       .start()
       .onComplete(() => {
         canOperate.value = true
@@ -296,7 +292,11 @@ function onWindowResize() {
  * [animation update all tween && controls]
  */
 function animation() {
+  const hasTweens = TWEEN.getAll().length > 0
   TWEEN.update()
+  if (hasTweens) {
+    render()
+  }
   if (controls.value) {
     controls.value.update()
   }
@@ -324,7 +324,6 @@ function rollBall(rotateY: number, duration: number) {
         },
         duration * 1000,
       )
-      .onUpdate(render)
       .start()
       .onStop(() => {
         resolve('')
@@ -345,7 +344,6 @@ function resetCamera() {
       },
       1000,
     )
-    .onUpdate(render)
     .start()
     .onComplete(() => {
       new TWEEN.Tween(camera.value.rotation)
@@ -357,7 +355,6 @@ function resetCamera() {
           },
           1000,
         )
-        .onUpdate(render)
         .start()
         .onComplete(() => {
           canOperate.value = true
@@ -379,7 +376,7 @@ function render() {
   }
 }
 async function enterLottery() {
-  if (!canOperate.value) {
+  if (!canOperate.value || objects.value.length === 0) {
     return
   }
   if (!intervalTimer.value) {
@@ -387,13 +384,16 @@ async function enterLottery() {
   }
   if (patternList.value.length) {
     for (let i = 0; i < patternList.value.length; i++) {
-      if (i < rowCount.value * 7) {
+      if (objects.value[patternList.value[i] - 1]) {
         objects.value[patternList.value[i] - 1].element.style.backgroundColor = rgba(cardColor.value, Math.random() * 0.5 + 0.25)
       }
     }
   }
   canOperate.value = false
   await transform(targets.sphere, 1000)
+  if (disposed) {
+    return
+  }
   currentStatus.value = 1
   rollBall(0.1, 2000)
 }
@@ -443,7 +443,7 @@ function startLottery() {
 
   toast.open({
     // message: `现在抽取${currentPrize.value.name} ${leftover}人`,
-    message: i18n.global.t('error.startDraw', { count: currentPrize.value.name, leftover }),
+    message: escapeHtml(i18n.global.t('error.startDraw', { count: currentPrize.value.name, leftover })),
     type: 'default',
     position: 'top-right',
     duration: 8000,
@@ -496,7 +496,9 @@ async function stopLottery() {
       .start()
       .onComplete(() => {
         confettiFire()
-        resetCamera()
+        if (index === luckyTargets.value.length - 1) {
+          resetCamera()
+        }
       })
   })
 }
@@ -551,7 +553,11 @@ function confettiFire() {
 
     // keep going until we are out of time
     if (Date.now() < end) {
-      requestAnimationFrame(frame)
+      const frameId = requestAnimationFrame(() => {
+        confettiFrameIds.delete(frameId)
+        frame()
+      })
+      confettiFrameIds.add(frameId)
     }
   }())
   centerFire(0.25, {
@@ -649,6 +655,9 @@ function listenKeyboard(e: any) {
 }
 
 function cleanup() {
+  disposed = true
+  confettiFrameIds.forEach(frameId => cancelAnimationFrame(frameId))
+  confettiFrameIds.clear()
   // 停止所有Tween动画
   TWEEN.removeAll()
 

@@ -14,13 +14,14 @@ const audioDbStore = localforage.createInstance({
   name: 'audioStore',
 })
 const audio = ref(new Audio())
+let playRequest = 0
 const settingRef = ref()
 // const audio = ref(new Audio())
 const globalConfig = useStore().globalConfig
 const { getMusicList: localMusicList, getCurrentMusic: currentMusic } = storeToRefs(globalConfig)
 // const localMusicListValue = ref(localMusicList)
 
-async function play(item: any) {
+async function play(item: any, request: number) {
   if (!item) {
     return
   }
@@ -33,20 +34,26 @@ async function play(item: any) {
   if (!item.url) {
     return
   }
-  if (item.url === 'Storage') {
-    audioUrl = await audioDbStore.getItem(item.name) as string
-  }
-  else {
-    audioUrl = item.url
-  }
-  audio.value.pause()
-  audio.value.src = audioUrl
   try {
+    if (item.url === 'Storage') {
+      audioUrl = await audioDbStore.getItem(item.name) as string
+    }
+    else {
+      audioUrl = item.url
+    }
+    // A previous storage read may finish after pause, next-track, or unmount.
+    if (request !== playRequest) {
+      return
+    }
+    audio.value.pause()
+    audio.value.src = audioUrl
     await audio.value.play()
   }
   catch (error) {
     console.error('Unable to play audio', error)
-    globalConfig.setCurrentMusic(item, true)
+    if (request === playRequest) {
+      globalConfig.setCurrentMusic(item, true)
+    }
   }
 }
 function playMusic(item: any, skip = false) {
@@ -117,12 +124,17 @@ function handleFullscreenChange() {
 }
 
 onUnmounted(() => {
+  playRequest++
+  audio.value.pause()
+  audio.value.removeAttribute('src')
+  audio.value.load()
   audio.value.removeEventListener('ended', nextPlay)
   document.removeEventListener('fullscreenchange', handleFullscreenChange)
 })
 watch(currentMusic, (val: any) => {
+  const request = ++playRequest
   if (!val.paused && audio.value) {
-    void play(val.item)
+    void play(val.item, request)
   }
   else {
     audio.value.pause()

@@ -43,16 +43,14 @@ async function getMusicDbStore() {
   const existingStorageKeys = new Set(
     localMusicList.value.filter(item => item.url === 'Storage').map(item => item.name),
   )
-  if (keys.length > 0) {
-    audioDbStore.iterate((value: string, key: string) => {
-      if (existingStorageKeys.has(key)) {
-        return
-      }
-      globalConfig.addMusic({
-        id: key,
-        name: key,
-        url: 'Storage',
-      })
+  for (const key of keys) {
+    if (existingStorageKeys.has(key)) {
+      continue
+    }
+    globalConfig.addMusic({
+      id: key,
+      name: key,
+      url: 'Storage',
     })
   }
 }
