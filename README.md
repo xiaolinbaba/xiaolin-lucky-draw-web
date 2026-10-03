@@ -53,6 +53,14 @@ pnpm build
 
 构建产物将输出到 `dist` 目录
 
+```bash
+pnpm check
+```
+
+执行代码规范检查、自动化测试、类型检查和标准生产构建。
+
+需要离线构建时仍可使用 `pnpm build:file`，产物输出到 `dist-file`；Cloudflare 部署使用标准构建。
+
 本项目 fork 自 https://github.com/LOG1997/log-lottery
 
 ## 部署
@@ -99,12 +107,9 @@ Cloudflare Workers Builds 的 Node.js 版本已通过 `.node-version` 固定为 
 
 SheetJS 依赖按官方建议固定在 `vendor/xlsx-0.20.3.tgz`，避免部署构建依赖外部 CDN，并由锁文件记录完整性。
 
-**3. API 请求配置**
+**3. 数据存储**
 
-如果项目需要调用后端 API：
-- 开发环境：使用 Vite 代理（`/api` → `VITE_BASE_URL`）
-- 生产环境：需要配置实际的 API 地址
-- 可以通过环境变量 `VITE_BASE_URL` 配置
+当前项目为前端静态应用，活动配置及人员名单存储在访问者浏览器中，上传的图片和音乐存储在 IndexedDB。Cloudflare 托管静态资源，不提供活动数据的跨设备同步；不需要后端 API 服务。
 
 #### 自定义域名与持续部署
 
@@ -128,25 +133,6 @@ SheetJS 依赖按官方建议固定在 `vendor/xlsx-0.20.3.tgz`，避免部署�
 - 检查 `wrangler.jsonc` 的 `assets.directory` 和 `not_found_handling`
 - 检查 Vue Router 的 base 配置
 
-**API 请求失败**
-- 检查 CORS 配置
-- 确认 API 地址配置正确
-- 考虑使用 Cloudflare Workers 作为 API 代理
-
-
-### 可选：Docker / Nginx
-
-当前项目部署在 Cloudflare，不需要 Docker。以下仅用于其他服务器上的容器部署。
-
-容器与标准构建统一使用根路径 `/`，支持管理页面和首页的 History 路由回退。
-
-```bash
-docker build -t luck .
-docker run --rm -p 8080:80 luck
-```
-
-浏览器打开 `http://localhost:8080`。容器只托管静态资源；活动数据存储在访问者浏览器中。
-
 ## 项目结构
 
 ```
@@ -157,7 +143,6 @@ luck/
 │   ├── _headers        # Cloudflare 安全头和静态资源缓存规则
 │   └── favicon.svg     # 网站图标
 ├── src/
-│   ├── api/            # API 请求
 │   ├── assets/       # 资源文件
 │   ├── components/   # 组件
 │   ├── hooks/        # 组合式函数
@@ -166,7 +151,9 @@ luck/
 │   ├── router/       # 路由配置
 │   ├── store/        # 状态管理
 │   ├── utils/        # 工具函数
-│   └── views/        # 页面组件
+│   ├── views/        # 页面组件
+│   └── workers/      # Excel 导入后台线程
+├── vendor/           # 固定版本的 SheetJS 安装包
 ├── wrangler.jsonc    # Cloudflare Workers Static Assets 配置
 └── vite.config.ts    # Vite 配置
 ```

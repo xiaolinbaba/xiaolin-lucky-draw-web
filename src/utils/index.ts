@@ -32,8 +32,7 @@ export function addOtherInfo(personList: any[]) {
   return personList
 }
 
-export function selectCard(cardIndexArr: number[], tableLength: number, _personId: number): number | null {
-  // _personId 目前未参与计算，保留参数以兼容调用方
+export function selectCard(cardIndexArr: number[], tableLength: number): number | null {
   return selectAvailableIndex(cardIndexArr, tableLength)
 }
 

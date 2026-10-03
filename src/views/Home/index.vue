@@ -49,14 +49,10 @@ const renderer = shallowRef()
 const controls = shallowRef()
 const objects = shallowRef<any[]>([])
 interface TargetType {
-  grid: any[]
-  helix: any[]
   table: any[]
   sphere: any[]
 }
 const targets: TargetType = {
-  grid: [],
-  helix: [],
   table: [],
   sphere: [],
 }
@@ -169,7 +165,6 @@ function init() {
 
   createTableVertices()
   createSphereVertices()
-  createHelixVertices()
 
   function createTableVertices() {
     const tableLen = tableData.value.length
@@ -204,30 +199,6 @@ function init() {
       vector.copy(object.position).multiplyScalar(2)
       object.lookAt(vector)
       targets.sphere.push(object)
-    }
-  }
-  function createHelixVertices() {
-    let i = 0
-    const vector = new Vector3()
-    const objLength = objects.value.length
-    for (; i < objLength; ++i) {
-      const phi = i * 0.213 + Math.PI
-
-      const object = new Object3D()
-
-      object.position.x = 800 * Math.sin(phi)
-      object.position.y = -(i * 8) + 450
-      object.position.z = 800 * Math.cos(phi + Math.PI)
-
-      object.scale.set(1.1, 1.1, 1.1)
-
-      vector.x = object.position.x * 2
-      vector.y = object.position.y
-      vector.z = object.position.z * 2
-
-      object.lookAt(vector)
-
-      targets.helix.push(object)
     }
   }
   window.addEventListener('resize', onWindowResize, false)
@@ -457,14 +428,14 @@ async function stopLottery() {
 
   const windowSize = { width: window.innerWidth, height: window.innerHeight }
   luckyTargets.value.forEach((person: IPersonConfig, index: number) => {
-    const cardIndex = selectCard(luckyCardList.value, tableData.value.length, person.id)
+    const cardIndex = selectCard(luckyCardList.value, tableData.value.length)
     if (cardIndex === null) {
       return
     }
     luckyCardList.value.push(cardIndex)
     const totalLuckyCount = luckyTargets.value.length
     const item = objects.value[cardIndex]
-    const { xTable, yTable } = useElementPosition(item, rowCount.value, totalLuckyCount, { width: cardSize.value.width * 2, height: cardSize.value.height * 2 }, windowSize, index)
+    const { xTable, yTable } = useElementPosition(totalLuckyCount, { width: cardSize.value.width * 2, height: cardSize.value.height * 2 }, windowSize, index)
     new TWEEN.Tween(item.position)
       .to({
         x: xTable,
@@ -601,7 +572,7 @@ function setDefaultPersonList() {
   window.location.reload()
 }
 // 随机替换数据
-function randomBallData(mod: 'default' | 'lucky' | 'sphere' = 'default') {
+function randomBallData(mod: 'default' | 'sphere' = 'default') {
   // 两秒执行一次
   intervalTimer.value = setInterval(() => {
     // 产生随机数数组
@@ -622,7 +593,7 @@ function randomBallData(mod: 'default' | 'lucky' | 'sphere' = 'default') {
       if (!objects.value[cardRandomIndexArr[i]]) {
         continue
       }
-      objects.value[cardRandomIndexArr[i]].element = useElementStyle(objects.value[cardRandomIndexArr[i]].element, allPersonList.value[personRandomIndexArr[i]], cardRandomIndexArr[i], patternList.value, patternColor.value, cardColor.value, { width: cardSize.value.width, height: cardSize.value.height }, textSize.value, mod, 'change')
+      objects.value[cardRandomIndexArr[i]].element = useElementStyle(objects.value[cardRandomIndexArr[i]].element, allPersonList.value[personRandomIndexArr[i]], cardRandomIndexArr[i], patternList.value, patternColor.value, cardColor.value, { width: cardSize.value.width, height: cardSize.value.height }, textSize.value, mod)
     }
   }, 200)
 }
@@ -722,8 +693,6 @@ onMounted(() => {
 })
 onUnmounted(() => {
   cleanup()
-  clearInterval(intervalTimer.value)
-  intervalTimer.value = null
   window.removeEventListener('keydown', listenKeyboard)
 })
 </script>

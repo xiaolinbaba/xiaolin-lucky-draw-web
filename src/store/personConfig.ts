@@ -16,10 +16,6 @@ export const usePersonConfig = defineStore('person', {
     }
   },
   getters: {
-    // 获取全部配置
-    getPersonConfig(state) {
-      return state.personConfig
-    },
     // 获取全部人员名单
     getAllPersonList(state) {
       return state.personConfig.allPersonList.filter((item: IPersonConfig) => {

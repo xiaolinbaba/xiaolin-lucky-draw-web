@@ -8,4 +8,3 @@ declare module '*.vue' {
 }
 
 declare module 'sparticles'
-declare module 'three-trackballcontrols'

@@ -89,7 +89,7 @@ export const configRoutesChildren = [
   },
 ]
 
-// 使用根路径路由配置（适用于 file 模式和 Cloudflare Pages 部署）
+// 使用根路径路由配置（适用于 file 模式和 Cloudflare Workers 部署）
 const rootRoutes = [
   {
     path: '/',
@@ -103,8 +103,7 @@ const rootRoutes = [
       },
       {
         path: '/demo',
-        name: 'Demo',
-        component: () => import('@/views/Demo/index.vue'),
+        redirect: '/home',
       },
       {
         path: '/config',
@@ -114,13 +113,10 @@ const rootRoutes = [
     ],
   },
 ]
-// 在 file 模式下使用 hash 路由，其他模式使用 history 路由
-const finalRoutes = rootRoutes
-
 const router = createRouter({
   // 读取环境变量：file 模式使用 hash 路由，其他模式使用 history 路由
   history: envMode === 'file' ? createWebHashHistory() : createWebHistory(),
-  routes: finalRoutes,
+  routes: rootRoutes,
 })
 
 export default router

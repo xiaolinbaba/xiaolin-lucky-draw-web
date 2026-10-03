@@ -245,9 +245,6 @@ export function getDefaultPersonList(count: number = 50): IPersonConfig[] {
   return generateDefaultPersonList(count)
 }
 
-// 为了向后兼容，导出一个默认的列表（但建议使用 getDefaultPersonList 函数）
-export const defaultPersonList = generateDefaultPersonList(50)
-
 export const defaultMusicList = [
   {
     id: `Radetzky March.mp3${new Date().getTime().toString()}`,

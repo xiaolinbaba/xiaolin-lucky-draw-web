@@ -4,16 +4,11 @@ import path from 'node:path'
 import legacy from '@vitejs/plugin-legacy'
 import vue from '@vitejs/plugin-vue'
 import { visualizer } from 'rollup-plugin-visualizer'
-import AutoImport from 'unplugin-auto-import/vite'
-import IconsResolver from 'unplugin-icons/resolver'
-import Icons from 'unplugin-icons/vite'
-import Components from 'unplugin-vue-components/vite'
-import { defineConfig, loadEnv } from 'vite'
+import { defineConfig } from 'vite'
 import { createSvgIconsPlugin } from 'vite-plugin-svg-icons'
 // https://vitejs.dev/config/
 
 export default defineConfig(({ mode }) => {
-    const env = loadEnv(mode, __dirname)
     const chunkName = mode === 'prebuild' ? '[name]' : 'chunk'
 
     return {
@@ -42,53 +37,10 @@ export default defineConfig(({ mode }) => {
                 // 指定symbolId格式
                 symbolId: 'icon-[dir]-[name]',
             }),
-            AutoImport({
-                resolvers: [
-                    // 自动导入图标组件
-                    IconsResolver({
-                        prefix: 'Icon',
-                    }),
-                ],
-                dts: path.resolve(path.resolve(__dirname, 'src'), 'auto-imports.d.ts'),
-            }),
-            Components({
-                resolvers: [
-                    // 自动注册图标组件
-                    IconsResolver({
-                        enabledCollections: ['ep'],
-                    }),
-                ],
-                dts: path.resolve(path.resolve(__dirname, 'src'), 'components.d.ts'),
-            }),
-            Icons({
-                autoInstall: true,
-            }),
         ],
-        css: {
-            preprocessorOptions: {
-                scss: {
-                    additionalData: '@use "@/style/global.scss" as *;',
-                },
-            },
-            // postcss: {
-            //     plugins: [
-            //         require('tailwindcss'),
-            //         require('autoprefixer'),
-            //     ]
-            // }
-        },
         server: {
             host: 'localhost',
             port: 6719,
-            proxy: {
-                '/api': {
-                    target: env.VITE_BASE_URL,
-                    // 是否跨域
-                    changeOrigin: true,
-                    // 路径重写
-                    rewrite: path => path.replace(/^\/api/, ''),
-                },
-            },
         },
         resolve: {
             alias: {
@@ -135,8 +87,6 @@ export default defineConfig(({ mode }) => {
         test: {
             globals: true, // --> 0.8.1+  请修改成globals
             environment: 'jsdom',
-            // include: ['**/__tests__/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-            // passWithNoTests: true,
         },
     }
 })

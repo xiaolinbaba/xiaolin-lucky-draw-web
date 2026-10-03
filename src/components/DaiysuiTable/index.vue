@@ -42,7 +42,7 @@ const actionsColumns = computed<any[]>(() => {
           <th v-for="(item, index) in dataColumns" :key="index">
             {{ item.label }}
           </th>
-          <th v-for="(item, index) in actionsColumns" :key="index">
+          <th v-for="(_, index) in actionsColumns" :key="index">
             {{ t('table.operation') }}
           </th>
         </tr>

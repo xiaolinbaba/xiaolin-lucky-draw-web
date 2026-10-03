@@ -1,9 +1,0 @@
-node_modules
-dist
-src-tauri
-dist-file
-.git
-.codex
-.agents
-.env.local
-.env.*.local

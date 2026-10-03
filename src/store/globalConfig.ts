@@ -47,10 +47,6 @@ export const useGlobalConfig = defineStore('global', {
     return createDefaultGlobalConfig()
   },
   getters: {
-    // 获取全部配置
-    getGlobalConfig(state) {
-      return state.globalConfig
-    },
     // 获取标题
     getTopTitle(state) {
       return state.globalConfig.topTitle
@@ -223,14 +219,6 @@ export const useGlobalConfig = defineStore('global', {
         }
       }
     },
-    // 重置图片列表
-    resetImageList() {
-      this.globalConfig.imageList = clone(defaultImageList) as IImage[]
-    },
-    // 清空图片列表
-    clearImageList() {
-      this.globalConfig.imageList = [] as IImage[]
-    },
     // 设置是否显示奖品列表
     setIsShowPrizeList(isShowPrizeList: boolean) {
       this.globalConfig.isSHowPrizeList = isShowPrizeList
@@ -243,10 +231,6 @@ export const useGlobalConfig = defineStore('global', {
     // 设置背景图片
     setBackground(background: any) {
       this.globalConfig.theme.background = background
-    },
-    // 设置是否显示头像
-    setIsShowAvatar(isShowAvatar: boolean) {
-      this.globalConfig.isShowAvatar = isShowAvatar
     },
     // 重置所有配置
     reset() {

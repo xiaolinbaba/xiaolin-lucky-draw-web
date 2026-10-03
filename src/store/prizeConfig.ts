@@ -25,19 +25,9 @@ export const usePrizeConfig = defineStore('prize', {
     }
   },
   getters: {
-    // 获取全部配置
-    getPrizeConfigAll(state) {
-      return state.prizeConfig
-    },
     // 获取奖品列表
     getPrizeConfig(state) {
       return state.prizeConfig.prizeList
-    },
-    // 根据id获取配置
-    getPrizeConfigById(state) {
-      return (id: number | string) => {
-        return state.prizeConfig.prizeList.find(item => String(item.id) === String(id))
-      }
     },
     // 获取当前奖项
     getCurrentPrize(state) {
@@ -50,10 +40,6 @@ export const usePrizeConfig = defineStore('prize', {
 
   },
   actions: {
-    // 设置奖项
-    setPrizeConfig(prizeList: IPrizeConfig[]) {
-      this.prizeConfig.prizeList = prizeList
-    },
     // 添加奖项
     addPrizeConfig(prizeConfigItem: IPrizeConfig) {
       this.prizeConfig.prizeList.push(prizeConfigItem)

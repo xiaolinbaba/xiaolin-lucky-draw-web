@@ -11,9 +11,6 @@ export const useSystem = defineStore('system', {
     getIsMobile(state) {
       return state.isMobile
     },
-    getIsChrome(state) {
-      return state.isChrome
-    },
   },
   actions: {
     setIsMobile(isMobile: boolean) {
