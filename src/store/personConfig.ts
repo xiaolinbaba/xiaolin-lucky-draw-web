@@ -52,6 +52,12 @@ export const usePersonConfig = defineStore('person', {
     },
   },
   actions: {
+    updatePersonLayout(rowCount: number) {
+      this.personConfig.allPersonList.forEach((person, index) => {
+        person.x = index % rowCount + 1
+        person.y = Math.floor(index / rowCount) + 1
+      })
+    },
     // 添加未中奖人员
     addNotPersonList(personList: IPersonConfig[]) {
       if (personList.length <= 0) {

@@ -10,13 +10,13 @@ const props = defineProps({
   },
   separatedNumber: {
     type: Array<Separate>,
-    default: [],
+    default: () => [],
   },
 })
 const emits = defineEmits(['submitData'])
 const { t } = useI18n()
 const separatedNumberRef = ref()
-const { separatedNumber, totalNumber } = toRefs(props)
+const { totalNumber } = toRefs(props)
 const scaleList = ref<number[]>([])
 function editScale(item: number) {
   if (item === totalNumber.value) {
@@ -25,7 +25,6 @@ function editScale(item: number) {
   if (scaleList.value.includes(item)) {
     const index = scaleList.value.indexOf(item)
     scaleList.value.splice(index, 1)
-    separatedNumber.value.splice(index, 1)
   }
   else {
     scaleList.value.push(item)
@@ -33,19 +32,14 @@ function editScale(item: number) {
   }
 }
 function clearData() {
-  emits('submitData', separatedNumber.value)
+  const batches = scaleList.value.slice(1).map((boundary, index) => ({
+    id: (index + 1).toString(),
+    count: boundary - scaleList.value[index],
+    isUsedCount: 0,
+  }))
+  emits('submitData', batches)
   separatedNumberRef.value.close()
 }
-watch(scaleList, (val: number[]) => {
-  separatedNumber.value.length = 0
-  for (let i = 1; i < scaleList.value.length; i++) {
-    separatedNumber.value[i - 1] = {
-      id: i.toString(),
-      count: val[i] - val[i - 1],
-      isUsedCount: 0,
-    }
-  }
-}, { deep: true })
 
 watch(totalNumber, (val) => {
   if (val <= 0) {
@@ -53,9 +47,9 @@ watch(totalNumber, (val) => {
   }
   separatedNumberRef.value.showModal()
   // scaleList.value = [0, val]
-  scaleList.value = Array.from({ length: separatedNumber.value.length + 1 }).fill(totalNumber.value) as number[]
-  for (let i = separatedNumber.value.length - 1; i >= 0; i--) {
-    scaleList.value[i] = scaleList.value[i + 1] - separatedNumber.value[i].count
+  scaleList.value = Array.from({ length: props.separatedNumber.length + 1 }).fill(totalNumber.value) as number[]
+  for (let i = props.separatedNumber.length - 1; i >= 0; i--) {
+    scaleList.value[i] = scaleList.value[i + 1] - props.separatedNumber[i].count
   }
   if (scaleList.value[0] !== 0) {
     scaleList.value.unshift(0)
@@ -99,7 +93,7 @@ onUnmounted(() => document.removeEventListener('keydown', preventEscape))
       <div class="modal-action">
         <form method="dialog">
           <!-- if there is a button in form, it will close the modal -->
-          <button class="btn" @click="clearData">
+          <button type="button" class="btn" @click="clearData">
             {{ t('button.close') }}
           </button>
         </form>

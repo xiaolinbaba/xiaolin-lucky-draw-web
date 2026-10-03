@@ -11,6 +11,7 @@ import useStore from '@/store'
 import { getDefaultPersonList } from '@/store/data'
 import { addOtherInfo } from '@/utils'
 import { readFileBinary } from '@/utils/file'
+import { buildPersonExportRows } from '@/utils/personExport'
 
 const { t } = useI18n()
 const personConfig = useStore().personConfig
@@ -99,40 +100,7 @@ async function handleFileChange(e: Event) {
   }
 }
 function exportData() {
-  let data = JSON.parse(JSON.stringify(allPersonList.value))
-  // 排除一些字段
-  for (let i = 0; i < data.length; i++) {
-    delete data[i].x
-    delete data[i].y
-    delete data[i].id
-    delete data[i].avatar
-    delete data[i].createTime
-    delete data[i].updateTime
-    delete data[i].prizeId
-    // 修改字段名称
-    if (data[i].isWin) {
-      data[i].isWin = i18n.global.t('data.yes')
-    }
-    else {
-      data[i].isWin = i18n.global.t('data.no')
-    }
-    // 格式化数组为
-    data[i].prizeTime = data[i].prizeTime.join(',')
-    data[i].prizeName = data[i].prizeName.join(',')
-  }
-  let dataString = JSON.stringify(data)
-  dataString = dataString
-    // 先替换复合字段名，避免 name 是 prizeName 的子串导致表头被破坏
-    .replaceAll(/prizeName/g, i18n.global.t('data.prizeName'))
-    .replaceAll(/prizeTime/g, i18n.global.t('data.prizeTime'))
-    .replaceAll(/uid/g, i18n.global.t('data.number'))
-    .replaceAll(/isWin/g, i18n.global.t('data.isWin'))
-    .replaceAll(/department/g, i18n.global.t('data.department'))
-    .replaceAll(/name/g, i18n.global.t('data.name'))
-    .replaceAll(/identity/g, i18n.global.t('data.identity'))
-
-  data = JSON.parse(dataString)
-
+  const data = buildPersonExportRows(allPersonList.value, key => i18n.global.t(key))
   if (data.length > 0) {
     const dataBinary = XLSX.utils.json_to_sheet(data)
     const dataBinaryBinary = XLSX.utils.book_new()

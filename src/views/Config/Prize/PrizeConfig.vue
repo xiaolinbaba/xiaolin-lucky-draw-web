@@ -4,6 +4,7 @@ import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import EditSeparateDialog from '@/components/NumberSeparate/EditSeparateDialog.vue'
+import { usePrizeBatchEditor } from '@/hooks/usePrizeBatchEditor'
 import i18n from '@/locales/i18n'
 import useStore from '@/store'
 
@@ -15,7 +16,7 @@ const { getPrizeConfig: localPrizeList, getCurrentPrize: currentPrize } = storeT
 const { getImageList: localImageList } = storeToRefs(globalConfig)
 const prizeList = ref(localPrizeList)
 
-const selectedPrize = ref<IPrizeConfig | null>()
+const { selectedPrize, selectPrize, submitData } = usePrizeBatchEditor()
 
 function addPrize() {
   const defaultPrizeCOnfig: IPrizeConfig = {
@@ -40,26 +41,6 @@ function addPrize() {
     frequency: 1,
   }
   prizeConfig.addPrizeConfig(defaultPrizeCOnfig)
-}
-
-function selectPrize(item: IPrizeConfig) {
-  selectedPrize.value = item
-  selectedPrize.value.isUsedCount = 0
-  selectedPrize.value.isUsed = false
-
-  if (selectedPrize.value.separateCount.countList.length > 1) {
-    return
-  }
-  selectedPrize.value.separateCount = {
-    enable: true,
-    countList: [
-      {
-        id: '0',
-        count: item.count,
-        isUsedCount: 0,
-      },
-    ],
-  }
 }
 
 function changePrizeStatus(item: IPrizeConfig) {
@@ -96,10 +77,6 @@ function changePrizePerson(item: IPrizeConfig) {
     prizeList.value[indexPrize].separateCount.countList = []
     prizeList.value[indexPrize].isUsed ? prizeList.value[indexPrize].isUsedCount = prizeList.value[indexPrize].count : prizeList.value[indexPrize].isUsedCount = 0
   }
-}
-function submitData(value: any) {
-  selectedPrize.value!.separateCount.countList = value
-  selectedPrize.value = null
 }
 function resetDefault() {
   prizeConfig.resetDefault()

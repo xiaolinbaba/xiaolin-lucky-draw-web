@@ -1,5 +1,4 @@
 <script setup lang='ts'>
-import type { IPrizeConfig } from '../../types/storeType'
 import { storeToRefs } from 'pinia'
 import { onMounted, ref } from 'vue'
 
@@ -8,6 +7,7 @@ import defaultPrizeImage from '@/assets/images/龙.png'
 import ImageSync from '@/components/ImageSync/index.vue'
 
 import EditSeparateDialog from '@/components/NumberSeparate/EditSeparateDialog.vue'
+import { usePrizeBatchEditor } from '@/hooks/usePrizeBatchEditor'
 
 import i18n from '@/locales/i18n'
 import useStore from '@/store'
@@ -23,7 +23,7 @@ const prizeListRef = ref()
 const prizeListContainerRef = ref()
 
 const temporaryPrizeRef = ref()
-const selectedPrize = ref<IPrizeConfig | null>()
+const { selectedPrize, selectPrize, submitData } = usePrizeBatchEditor()
 // 获取prizeListRef高度
 function getPrizeListHeight() {
   let height = 200
@@ -52,29 +52,6 @@ function submitTemporaryPrize() {
   temporaryPrize.value.isShow = true
   temporaryPrize.value.id = new Date().getTime().toString()
   prizeConfig.setCurrentPrize(temporaryPrize.value)
-}
-function selectPrize(item: IPrizeConfig) {
-  selectedPrize.value = item
-  selectedPrize.value.isUsedCount = 0
-  selectedPrize.value.isUsed = false
-
-  if (selectedPrize.value.separateCount.countList.length > 1) {
-    return
-  }
-  selectedPrize.value.separateCount = {
-    enable: true,
-    countList: [
-      {
-        id: '0',
-        count: item.count,
-        isUsedCount: 0,
-      },
-    ],
-  }
-}
-function submitData(value: any) {
-  selectedPrize.value!.separateCount.countList = value
-  selectedPrize.value = null
 }
 function changePersonCount() {
   temporaryPrize.value.separateCount.countList = []

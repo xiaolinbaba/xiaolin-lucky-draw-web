@@ -71,4 +71,26 @@ describe('draw state consistency', () => {
 
     expect(personStore.getNotThisPrizePersonList).toEqual([])
   })
+
+  it('repositions every participant without removing winners or changing prize history', () => {
+    const personStore = usePersonConfig()
+    const prizeStore = usePrizeConfig()
+    const people = Array.from({ length: 5 }, (_, index) => ({ ...createPerson(), id: index + 1, uid: `P${index + 1}` }))
+    personStore.addNotPersonList(people)
+    const prize = prizeStore.prizeConfig.prizeList[0]
+    personStore.addAlreadyPersonList([people[2]], prize)
+    prize.isUsedCount = 1
+    const before = JSON.stringify(personStore.personConfig)
+
+    personStore.updatePersonLayout(2)
+
+    expect(personStore.getAllPersonList.map(person => person.id)).toEqual([1, 2, 3, 4, 5])
+    expect(personStore.getAllPersonList.map(person => [person.x, person.y])).toEqual([[1, 1], [2, 1], [1, 2], [2, 2], [1, 3]])
+    expect(personStore.getAlreadyPersonList).toHaveLength(1)
+    expect(personStore.getAlreadyPersonDetail).toHaveLength(1)
+    expect(personStore.getAlreadyPersonList[0].prizeId).toEqual([String(prize.id)])
+    expect(prize.isUsedCount).toBe(1)
+    const withoutLayout = (value: string) => JSON.parse(value, (key, item) => key === 'x' || key === 'y' ? undefined : item)
+    expect(withoutLayout(JSON.stringify(personStore.personConfig))).toEqual(withoutLayout(before))
+  })
 })

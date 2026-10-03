@@ -20,7 +20,6 @@ const personConfig = useStore().personConfig
 const prizeConfig = useStore().prizeConfig
 const { getTopTitle: topTitle, getTheme: localTheme, getPatterColor: patternColor, getPatternList: patternList, getCardColor: cardColor, getLuckyColor: luckyCardColor, getTextColor: textColor, getCardSize: cardSize, getTextSize: textSize, getRowCount: rowCount, getIsShowPrizeList: isShowPrizeList, getLanguage: userLanguage, getBackground: backgroundImage, getImageList: imageList,
 } = storeToRefs(globalConfig)
-const { getAlreadyPersonList: alreadyPersonList, getNotPersonList: notPersonList } = storeToRefs(personConfig)
 const resetDataDialogRef = ref()
 interface ThemeDaType {
   [key: string]: any
@@ -67,19 +66,7 @@ function parseSchema(props: ValidatePayload) {
 function resetPersonLayout() {
   isRowCountChange.value = 2
   setTimeout(() => {
-    const alreadyLen = alreadyPersonList.value.length
-    const notLen = notPersonList.value.length
-    if (alreadyLen <= 0 && notLen <= 0) {
-      isRowCountChange.value = 0
-      return
-    }
-    const allPersonList = alreadyPersonList.value.concat(notPersonList.value)
-    const newAlreadyPersonList = allPersonList.slice(0, alreadyLen)
-    const newNotPersonList = allPersonList.slice(alreadyLen, notLen + alreadyLen)
-    personConfig.deleteAllPerson()
-    personConfig.addNotPersonList(newNotPersonList)
-    personConfig.addAlreadyPersonList(newAlreadyPersonList, null)
-
+    personConfig.updatePersonLayout(rowCount.value)
     isRowCountChange.value = 0
   }, 1000)
 }
