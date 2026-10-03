@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import localforage from 'localforage'
-import { onMounted, ref } from 'vue'
+import { onUnmounted, ref, watch } from 'vue'
 
 const props = defineProps({
   imgItem: {
@@ -13,6 +13,7 @@ const imageDbStore = localforage.createInstance({
 })
 
 const imgUrl = ref('')
+let request = 0
 
 async function getImageStoreItem(item: any): Promise<string> {
   let image = ''
@@ -27,14 +28,24 @@ async function getImageStoreItem(item: any): Promise<string> {
   return image
 }
 
-onMounted(async () => {
-  const image = await getImageStoreItem(props.imgItem)
-  imgUrl.value = image
-})
+watch(() => [props.imgItem.id, props.imgItem.url], async () => {
+  const current = ++request
+  imgUrl.value = ''
+  try {
+    const image = await getImageStoreItem(props.imgItem)
+    if (current === request)
+      imgUrl.value = image || ''
+  }
+  catch {
+    if (current === request)
+      imgUrl.value = ''
+  }
+}, { immediate: true })
+onUnmounted(() => request++)
 </script>
 
 <template>
-  <img :src="imgUrl" alt="Image" class="object-cover h-full rounded-xl">
+  <img :src="imgUrl || undefined" alt="Image" class="object-cover h-full rounded-xl">
 </template>
 
 <style lang='scss' scoped>

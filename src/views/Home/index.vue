@@ -19,6 +19,7 @@ import { filterData, selectCard } from '@/utils'
 import { rgba } from '@/utils/color'
 import { escapeHtml } from '@/utils/html'
 import { sampleWithoutReplacement } from '@/utils/random'
+import { getDrawCount } from '@/utils/validation'
 import PrizeList from './PrizeList.vue'
 import 'vue-toast-notification/dist/theme-sugar.css'
 
@@ -413,6 +414,11 @@ function startLottery() {
 
     return
   }
+  const drawCount = getDrawCount(currentPrize.value, objects.value.length)
+  if (drawCount <= 0) {
+    toast.open({ message: i18n.global.t('error.invalidDraw'), type: 'warning', position: 'top-right' })
+    return
+  }
   personPool.value = currentPrize.value.isAll ? notThisPrizePersonList.value : notPersonList.value
   // 验证抽奖人数是否还够
   if (personPool.value.length < currentPrize.value.count - currentPrize.value.isUsedCount) {
@@ -425,20 +431,8 @@ function startLottery() {
 
     return
   }
-  luckyCount.value = 10
-  // 自定义抽奖个数
-
-  let leftover = currentPrize.value.count - currentPrize.value.isUsedCount
-  const customCount = currentPrize.value.separateCount
-  if (customCount && customCount.enable && customCount.countList.length > 0) {
-    for (let i = 0; i < customCount.countList.length; i++) {
-      if (customCount.countList[i].isUsedCount < customCount.countList[i].count) {
-        leftover = customCount.countList[i].count - customCount.countList[i].isUsedCount
-        break
-      }
-    }
-  }
-  luckyCount.value = Math.min(leftover, luckyCount.value, objects.value.length)
+  const leftover = drawCount
+  luckyCount.value = drawCount
   luckyTargets.value = sampleWithoutReplacement(personPool.value, luckyCount.value)
 
   toast.open({

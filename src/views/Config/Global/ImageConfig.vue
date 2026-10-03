@@ -5,11 +5,14 @@ import { storeToRefs } from 'pinia'
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ImageSync from '@/components/ImageSync/index.vue'
+import { useStorageFeedback } from '@/hooks/useStorageFeedback'
 import useStore from '@/store'
 import { readFileData } from '@/utils/file'
 
 const { t } = useI18n()
+const { storageError, storageUsage, busy, run } = useStorageFeedback()
 const globalConfig = useStore().globalConfig
+const prizeConfig = useStore().prizeConfig
 const { getImageList: localImageList } = storeToRefs(globalConfig)
 const limitType = ref('image/*')
 const imgUploadToast = ref(0) // 0是不显示，1是成功，2是失败,3是不是图片
@@ -37,9 +40,11 @@ async function handleFileChange(e: Event) {
 
   try {
     const { dataUrl, fileName } = await readFileData(file)
-    await imageDbStore.setItem(`${new Date().getTime().toString()}+${fileName}`, dataUrl)
+    await run(async () => {
+      await imageDbStore.setItem(`${new Date().getTime().toString()}+${fileName}`, dataUrl)
+      await getImageDbStore()
+    })
     imgUploadToast.value = 1
-    await getImageDbStore()
   }
   catch (error) {
     console.error('Failed to store image', error)
@@ -65,16 +70,24 @@ async function getImageDbStore() {
   }
 }
 
-function removeImage(item: IImage) {
-  if (item.url === 'Storage') {
-    imageDbStore.removeItem(item.id).then(() => {
+async function removeImage(item: IImage) {
+  try {
+    await run(async () => {
+      if (item.url === 'Storage')
+        await imageDbStore.removeItem(item.id)
       globalConfig.removeImage(item.id)
+      for (const prize of [...prizeConfig.prizeConfig.prizeList, prizeConfig.prizeConfig.currentPrize, prizeConfig.prizeConfig.temporaryPrize]) {
+        if (String(prize.picture.id) === String(item.id))
+          prize.picture = { id: '', name: '', url: '' }
+      }
+      if (String(globalConfig.getBackground.id) === String(item.id))
+        globalConfig.setBackground({})
     })
   }
-  globalConfig.removeImage(item.id)
+  catch { /* Keep the list entry so deletion can be retried. */ }
 }
 onMounted(() => {
-  void getImageDbStore()
+  void run(getImageDbStore).catch(() => {})
 })
 watch(() => imgUploadToast.value, (val) => {
   if (val !== 0) {
@@ -106,10 +119,15 @@ onUnmounted(() => clearTimeout(toastTimer))
 
     <div class="config-toolbar">
       <label for="image-upload" class="btn btn-primary btn-sm cursor-pointer">{{ t('button.upload') }}</label>
-      <input id="image-upload" type="file" class="hidden" :accept="limitType" @change="handleFileChange">
+      <input id="image-upload" type="file" class="hidden" :accept="limitType" :disabled="busy" @change="handleFileChange">
       <span class="ml-auto text-sm text-base-content/60">{{ t('admin.itemCount', { count: localImageList.length }) }}</span>
     </div>
-
+    <p v-if="storageUsage" class="text-sm text-base-content/60">
+      {{ storageUsage }}
+    </p>
+    <p v-if="storageError" role="alert" class="alert alert-error">
+      {{ storageError }}
+    </p>
     <section class="config-section">
       <header class="config-section-header">
         <h2 class="config-section-title">
@@ -129,7 +147,7 @@ onUnmounted(() => clearTimeout(toastTimer))
             </div>
             <span class="truncate font-medium" :title="item.name">{{ item.name }}</span>
           </div>
-          <button class="btn btn-error btn-outline btn-xs self-end sm:self-auto" @click="removeImage(item)">
+          <button class="btn btn-error btn-outline btn-xs self-end sm:self-auto" :disabled="busy" @click="removeImage(item)">
             {{ t('button.delete') }}
           </button>
         </li>

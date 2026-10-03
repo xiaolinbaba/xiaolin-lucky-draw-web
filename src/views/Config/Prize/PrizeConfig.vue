@@ -3,10 +3,12 @@ import type { IPrizeConfig } from '@/types/storeType'
 import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import ConfirmDialog from '@/components/ConfirmDialog/index.vue'
 import EditSeparateDialog from '@/components/NumberSeparate/EditSeparateDialog.vue'
 import { usePrizeBatchEditor } from '@/hooks/usePrizeBatchEditor'
 import i18n from '@/locales/i18n'
 import useStore from '@/store'
+import { isIntegerInRange, numericLimits } from '@/utils/validation'
 
 const { t } = useI18n()
 const prizeConfig = useStore().prizeConfig
@@ -17,6 +19,8 @@ const { getImageList: localImageList } = storeToRefs(globalConfig)
 const prizeList = ref(localPrizeList)
 
 const { selectedPrize, selectPrize, submitData } = usePrizeBatchEditor()
+const confirmDialog = ref<InstanceType<typeof ConfirmDialog>>()
+const countErrors = ref<Record<string, string>>({})
 
 function addPrize() {
   const defaultPrizeCOnfig: IPrizeConfig = {
@@ -65,17 +69,21 @@ function changePrizeStatus(item: IPrizeConfig) {
   item.isUsed = !item.isUsed
 }
 
-function changePrizePerson(item: IPrizeConfig) {
-  let indexPrize = -1
-  for (let i = 0; i < prizeList.value.length; i++) {
-    if (prizeList.value[i].id === item.id) {
-      indexPrize = i
-      break
-    }
+function changePrizePerson(item: IPrizeConfig, event: Event) {
+  const input = event.target as HTMLInputElement
+  const count = input.valueAsNumber
+  const min = Math.max(1, item.isUsedCount)
+  if (!isIntegerInRange(count, min, numericLimits.prizeCount[1])) {
+    countErrors.value[String(item.id)] = t('error.integerRange', { min, max: numericLimits.prizeCount[1] })
+    input.value = String(item.count)
+    return
   }
-  if (indexPrize > -1) {
-    prizeList.value[indexPrize].separateCount.countList = []
-    prizeList.value[indexPrize].isUsed ? prizeList.value[indexPrize].isUsedCount = prizeList.value[indexPrize].count : prizeList.value[indexPrize].isUsedCount = 0
+  countErrors.value[String(item.id)] = ''
+  if (count !== item.count) {
+    item.count = count
+    item.separateCount.countList = []
+    item.isUsed = item.isUsedCount >= count
+    prizeConfig.selectNextAvailablePrize(true)
   }
 }
 function resetDefault() {
@@ -107,10 +115,10 @@ async function delAll() {
       <button class="btn btn-primary btn-sm" @click="addPrize">
         {{ t('button.add') }}
       </button>
-      <button class="btn btn-warning btn-outline btn-sm" @click="resetDefault">
+      <button class="btn btn-warning btn-outline btn-sm" @click="confirmDialog?.open(t('dialog.resetPrizes'), resetDefault)">
         {{ t('button.resetDefault') }}
       </button>
-      <button class="btn btn-error btn-outline btn-sm" @click="delAll">
+      <button class="btn btn-error btn-outline btn-sm" @click="confirmDialog?.open(t('dialog.deletePrizes', { count: prizeList.length }), delAll)">
         {{ t('button.allDelete') }}
       </button>
       <span class="ml-auto text-sm text-base-content/60">{{ t('admin.itemCount', { count: prizeList.length }) }}</span>
@@ -159,9 +167,11 @@ async function delAll() {
           <label class="config-field">
             <span class="label"><span class="label-text">{{ t('table.numberParticipants') }}</span></span>
             <input
-              v-model="item.count" type="number" :placeholder="t('placeHolder.winnerCount')" class="input input-bordered w-full"
-              @change="changePrizePerson(item)"
+              :value="item.count" type="number" :min="Math.max(1, item.isUsedCount)" :max="numericLimits.prizeCount[1]" step="1"
+              :placeholder="t('placeHolder.winnerCount')" class="input input-bordered w-full" :aria-invalid="!!countErrors[String(item.id)]"
+              @change="changePrizePerson(item, $event)"
             >
+            <span v-if="countErrors[String(item.id)]" role="alert" class="mt-1 text-sm text-error">{{ countErrors[String(item.id)] }}</span>
             <span class="mt-2 flex items-center gap-3 text-xs text-base-content/60">
               <progress class="progress progress-primary h-1.5 flex-1" :value="item.isUsedCount" :max="item.count" />
               <span class="tabular-nums">{{ item.isUsedCount }}/{{ item.count }}</span>
@@ -212,6 +222,7 @@ async function delAll() {
       :total-number="selectedPrize?.count" :separated-number="selectedPrize?.separateCount.countList"
       @submit-data="submitData"
     />
+    <ConfirmDialog ref="confirmDialog" />
   </div>
 </template>
 

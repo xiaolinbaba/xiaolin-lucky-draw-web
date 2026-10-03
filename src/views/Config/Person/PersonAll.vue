@@ -5,12 +5,14 @@ import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import * as XLSX from 'xlsx'
+import ConfirmDialog from '@/components/ConfirmDialog/index.vue'
 import DaiysuiTable from '@/components/DaiysuiTable/index.vue'
 import i18n from '@/locales/i18n'
 import useStore from '@/store'
 import { getDefaultPersonList } from '@/store/data'
 import { addOtherInfo } from '@/utils'
 import { readFileBinary } from '@/utils/file'
+import { importPeople } from '@/utils/importWorker'
 import { buildPersonExportRows } from '@/utils/personExport'
 
 const { t } = useI18n()
@@ -20,6 +22,8 @@ const { getAllPersonList: allPersonList, getAlreadyPersonList: alreadyPersonList
 const limitType = '.xlsx,.xls'
 const maxExcelFileSize = 10 * 1024 * 1024
 const importError = ref('')
+const importing = ref(false)
+const confirmDialog = ref<InstanceType<typeof ConfirmDialog>>()
 // const personList = ref<any[]>([])
 
 const resetDataDialog = ref()
@@ -33,69 +37,38 @@ async function handleFileChange(e: Event) {
   if (!file) {
     return
   }
+  if (importing.value)
+    return
   if (file.size > maxExcelFileSize) {
     importError.value = t('error.fileTooLarge', { size: 10 })
     input.value = ''
     return
   }
 
+  importing.value = true
   try {
     const dataBinary = await readFileBinary(file)
-    const workBook = XLSX.read(dataBinary, { type: 'array', cellDates: true })
-    const firstSheetName = workBook.SheetNames[0]
-    const workSheet = firstSheetName ? workBook.Sheets[firstSheetName] : undefined
-    if (!workSheet) {
-      throw new Error('Workbook does not contain a worksheet')
-    }
-
-    const excelData = XLSX.utils.sheet_to_json<Record<string, unknown>>(workSheet, { defval: '' })
-    const fieldMapping: Record<string, keyof Pick<IPersonConfig, 'uid' | 'name' | 'department' | 'identity'>> = {
-      编号: 'uid',
-      姓名: 'name',
-      部门: 'department',
-      职位: 'identity',
-      Number: 'uid',
-      Name: 'name',
-      Department: 'department',
-      Position: 'identity',
-    }
-
-    const mappedData = excelData.map((row) => {
-      const newRow: Record<string, unknown> = Object.create(null)
-      for (const [key, value] of Object.entries(row)) {
-        const mappedKey = Object.hasOwn(fieldMapping, key) ? fieldMapping[key] : key
-        newRow[mappedKey] = value
-      }
-      return {
-        ...newRow,
-        uid: String(newRow.uid ?? '').trim(),
-        name: String(newRow.name ?? '').trim(),
-        department: String(newRow.department ?? '').trim(),
-        identity: String(newRow.identity ?? '').trim(),
-        avatar: '',
-      }
-    })
-
-    if (mappedData.length === 0 || mappedData.some(row => !row.uid || !row.name)) {
-      throw new Error('Required columns are missing or contain empty values')
-    }
-
-    const uniqueUids = new Set(mappedData.map(row => row.uid))
-    if (uniqueUids.size !== mappedData.length) {
-      throw new Error('Participant numbers must be unique')
-    }
-
+    const mappedData = await importPeople(dataBinary)
     const allData = addOtherInfo(mappedData) as IPersonConfig[]
-    // Only replace persisted state after the entire workbook has passed validation.
-    personConfig.resetPerson()
-    personConfig.addNotPersonList(allData)
-    prizeConfig.resetDrawProgress()
+    const replace = () => {
+      personConfig.resetPerson()
+      personConfig.addNotPersonList(allData)
+      personConfig.updatePersonLayout(useStore().globalConfig.getRowCount)
+      prizeConfig.resetDrawProgress()
+    }
+    if (allPersonList.value.length) {
+      confirmDialog.value?.open(t('dialog.replacePeople', { count: allData.length }), replace)
+    }
+    else {
+      replace()
+    }
   }
   catch (error) {
     console.error('Failed to import participant workbook', error)
-    importError.value = t('error.importInvalid')
+    importError.value = t(`error.${error instanceof Error && ['importLimit', 'importTimeout'].includes(error.message) ? error.message : 'importInvalid'}`)
   }
   finally {
+    importing.value = false
     input.value = ''
   }
 }
@@ -243,7 +216,7 @@ const tableColumns = [
           {{ t('button.importData') }}
         </label>
       </span>
-      <input id="person-import" type="file" class="hidden" :accept="limitType" @change="handleFileChange">
+      <input id="person-import" type="file" class="hidden" :accept="limitType" :disabled="importing" @change="handleFileChange">
 
       <span class="tooltip tooltip-bottom" :data-tip="t('tooltip.downloadTemplateTip')">
         <button class="btn btn-secondary btn-outline btn-sm" @click="downloadTemplate">
@@ -268,6 +241,12 @@ const tableColumns = [
       </div>
     </div>
 
+    <p v-if="importing" role="status" class="flex items-center gap-2 text-sm">
+      <span class="loading loading-spinner loading-sm" />{{ t('admin.importing') }}
+    </p>
+    <p class="text-sm text-base-content/60">
+      {{ t('admin.importLimits') }}
+    </p>
     <div v-if="importError" role="alert" class="alert alert-error text-sm">
       {{ importError }}
     </div>
@@ -275,6 +254,7 @@ const tableColumns = [
     <section class="config-section">
       <DaiysuiTable :table-columns="tableColumns" :data="allPersonList" />
     </section>
+    <ConfirmDialog ref="confirmDialog" />
   </div>
 </template>
 

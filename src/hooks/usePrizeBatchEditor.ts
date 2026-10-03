@@ -1,11 +1,14 @@
 import type { IPrizeConfig, Separate } from '@/types/storeType'
 import { ref } from 'vue'
+import { isIntegerInRange, numericLimits } from '@/utils/validation'
 
 export function usePrizeBatchEditor() {
   const selectedPrize = ref<IPrizeConfig | null>(null)
   let originalPrize: IPrizeConfig | null = null
 
   function selectPrize(prize: IPrizeConfig) {
+    if (!isIntegerInRange(prize.count, ...numericLimits.prizeCount))
+      return
     originalPrize = prize
     selectedPrize.value = {
       ...prize,

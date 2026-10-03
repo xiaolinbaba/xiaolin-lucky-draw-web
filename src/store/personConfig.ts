@@ -2,6 +2,7 @@ import type { IPersonConfig, IPrizeConfig } from '@/types/storeType'
 
 import dayjs from 'dayjs'
 import { defineStore } from 'pinia'
+import { safeConfigStorage } from '@/utils/persistence'
 import { getDefaultPersonList } from './data'
 import { usePrizeConfig } from './prizeConfig'
 
@@ -155,7 +156,7 @@ export const usePersonConfig = defineStore('person', {
     strategies: [
       {
         // 如果要存储在localStorage中
-        storage: localStorage,
+        storage: safeConfigStorage,
         key: 'personConfig',
       },
     ],

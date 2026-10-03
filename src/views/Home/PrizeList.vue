@@ -9,8 +9,8 @@ import ImageSync from '@/components/ImageSync/index.vue'
 import EditSeparateDialog from '@/components/NumberSeparate/EditSeparateDialog.vue'
 import { usePrizeBatchEditor } from '@/hooks/usePrizeBatchEditor'
 
-import i18n from '@/locales/i18n'
 import useStore from '@/store'
+import { isIntegerInRange, numericLimits } from '@/utils/validation'
 
 const { t } = useI18n()
 const prizeConfig = useStore().prizeConfig
@@ -23,6 +23,8 @@ const prizeListRef = ref()
 const prizeListContainerRef = ref()
 
 const temporaryPrizeRef = ref()
+const temporaryDraft = ref(JSON.parse(JSON.stringify(temporaryPrize.value)))
+const temporaryError = ref('')
 const { selectedPrize, selectPrize, submitData } = usePrizeBatchEditor()
 // 获取prizeListRef高度
 function getPrizeListHeight() {
@@ -36,6 +38,8 @@ function getPrizeListHeight() {
 const prizeShow = ref(structuredClone(isShowPrizeList.value))
 
 function addTemporaryPrize() {
+  temporaryDraft.value = JSON.parse(JSON.stringify(temporaryPrize.value))
+  temporaryError.value = ''
   temporaryPrizeRef.value.showModal()
 }
 
@@ -44,30 +48,28 @@ function deleteTemporaryPrize() {
   prizeConfig.setTemporaryPrize(temporaryPrize.value)
 }
 function submitTemporaryPrize() {
-  if (!temporaryPrize.value.name || !temporaryPrize.value.count) {
-    // eslint-disable-next-line no-alert
-    alert(i18n.global.t('error.completeInformation'))
+  if (!temporaryDraft.value.name.trim()) {
+    temporaryError.value = t('error.completeInformation')
     return
   }
-  temporaryPrize.value.isShow = true
-  temporaryPrize.value.id = new Date().getTime().toString()
-  prizeConfig.setCurrentPrize(temporaryPrize.value)
+  const min = Math.max(1, temporaryDraft.value.isUsedCount)
+  if (!isIntegerInRange(temporaryDraft.value.count, min, numericLimits.prizeCount[1])) {
+    temporaryError.value = t('error.integerRange', { min, max: numericLimits.prizeCount[1] })
+    return
+  }
+  temporaryDraft.value.isShow = true
+  temporaryDraft.value.id ||= new Date().getTime().toString()
+  temporaryDraft.value.isUsed = temporaryDraft.value.isUsedCount >= temporaryDraft.value.count
+  prizeConfig.setTemporaryPrize(temporaryDraft.value)
+  prizeConfig.selectNextAvailablePrize(true)
+  temporaryPrizeRef.value.close()
 }
 function changePersonCount() {
-  temporaryPrize.value.separateCount.countList = []
-}
-function setCurrentPrize() {
-  for (let i = 0; i < localPrizeList.value.length; i++) {
-    if (localPrizeList.value[i].isUsedCount < localPrizeList.value[i].count) {
-      prizeConfig.setCurrentPrize(localPrizeList.value[i])
-
-      return
-    }
-  }
+  temporaryDraft.value.separateCount.countList = []
 }
 onMounted(() => {
   prizeListContainerRef.value.style.height = `${getPrizeListHeight()}px`
-  setCurrentPrize()
+  prizeConfig.selectNextAvailablePrize(true)
 })
 </script>
 
@@ -84,7 +86,7 @@ onMounted(() => {
               <span class="label-text">{{ t('table.prizeName') }}:</span>
             </div>
             <input
-              v-model="temporaryPrize.name" type="text" :placeholder="t('placeHolder.name')"
+              v-model="temporaryDraft.name" type="text" :placeholder="t('placeHolder.name')"
               class="max-w-xs input-sm input input-bordered"
             >
           </label>
@@ -93,9 +95,9 @@ onMounted(() => {
               <span class="label-text">{{ t('table.fullParticipation') }}</span>
             </div>
             <input
-              type="checkbox" :checked="temporaryPrize.isAll"
+              type="checkbox" :checked="temporaryDraft.isAll"
               class="mt-2 border-solid checkbox checkbox-secondary border-1"
-              @change="temporaryPrize.isAll = !temporaryPrize.isAll"
+              @change="temporaryDraft.isAll = !temporaryDraft.isAll"
             >
           </label>
           <label class="flex w-full max-w-xs">
@@ -103,7 +105,7 @@ onMounted(() => {
               <span class="label-text">{{ t('table.setLuckyNumber') }}</span>
             </div>
             <input
-              v-model="temporaryPrize.count" type="number" :placeholder="t('placeHolder.winnerCount')" class="max-w-xs input-sm input input-bordered"
+              v-model="temporaryDraft.count" type="number" min="1" max="20000" step="1" :placeholder="t('placeHolder.winnerCount')" class="max-w-xs input-sm input input-bordered"
               @change="changePersonCount"
             >
           </label>
@@ -112,21 +114,21 @@ onMounted(() => {
               <span class="label-text">{{ t('table.luckyPeopleNumber') }}</span>
             </div>
             <input
-              v-model="temporaryPrize.isUsedCount" disabled type="number" :placeholder="t('placeHolder.winnerCount')"
+              v-model="temporaryDraft.isUsedCount" disabled type="number" :placeholder="t('placeHolder.winnerCount')"
               class="max-w-xs input-sm input input-bordered"
             >
           </label>
-          <label v-if="temporaryPrize.separateCount" class="flex w-full max-w-xs">
+          <label v-if="temporaryDraft.separateCount" class="flex w-full max-w-xs">
             <div class="label">
               <span class="label-text">{{ t('table.onceNumber') }}</span>
             </div>
-            <div class="flex justify-start h-full" @click="selectPrize(temporaryPrize)">
+            <div class="flex justify-start h-full" @click="selectPrize(temporaryDraft)">
               <ul
-                v-if="temporaryPrize.separateCount.countList.length"
+                v-if="temporaryDraft.separateCount.countList.length"
                 class="flex flex-wrap w-full h-full gap-1 p-0 pt-1 m-0 cursor-pointer"
               >
                 <li
-                  v-for="se in temporaryPrize.separateCount.countList"
+                  v-for="se in temporaryDraft.separateCount.countList"
                   :key="se.id" class="relative flex items-center justify-center w-8 h-8 bg-slate-600/60 separated"
                 >
                   <div
@@ -148,8 +150,8 @@ onMounted(() => {
             <div class="label">
               <span class="label-text">{{ t('table.image') }}</span>
             </div>
-            <select v-model="temporaryPrize.picture" class="flex-1 w-12 select select-warning select-sm">
-              <option v-if="temporaryPrize.picture.id" :value="{ id: '', name: '', url: '' }">❌
+            <select v-model="temporaryDraft.picture" class="flex-1 w-12 select select-warning select-sm">
+              <option v-if="temporaryDraft.picture.id" :value="{ id: '', name: '', url: '' }">❌
               </option>
               <option disabled selected>{{ t('table.selectPicture') }}</option>
               <option v-for="picItem in localImageList" :key="picItem.id" class="w-auto" :value="picItem">{{
@@ -161,9 +163,12 @@ onMounted(() => {
             <p>说明：此选项用于在导入数据并设置好奖项之后，在抽奖过程中需要临时增加奖项的情况下使用。使用之前请测试流程，谢谢</p>
           </div>
         </div>
+        <p v-if="temporaryError" role="alert" class="text-error">
+          {{ temporaryError }}
+        </p>
         <div class="modal-action">
           <form method="dialog" class="flex gap-3">
-            <button class="btn btn-sm" @click="submitTemporaryPrize">
+            <button type="button" class="btn btn-sm" @click="submitTemporaryPrize">
               {{ t('button.confirm') }}
             </button>
             <button class="btn btn-sm">

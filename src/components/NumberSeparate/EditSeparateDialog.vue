@@ -18,8 +18,9 @@ const { t } = useI18n()
 const separatedNumberRef = ref()
 const { totalNumber } = toRefs(props)
 const scaleList = ref<number[]>([])
+const boundaryInput = ref(1)
 function editScale(item: number) {
-  if (item === totalNumber.value) {
+  if (!Number.isSafeInteger(item) || item <= 0 || item >= totalNumber.value) {
     return
   }
   if (scaleList.value.includes(item)) {
@@ -74,7 +75,7 @@ onUnmounted(() => document.removeEventListener('keydown', preventEscape))
       <p class="pb-8">
         {{ t('dialog.dialogSingleDrawLimit') }}
       </p>
-      <div class="flex justify-between px-3 text-center separated-number">
+      <div v-if="props.totalNumber <= 100" class="flex justify-between px-3 text-center separated-number">
         <div
           v-for="item in props.totalNumber" :key="item"
           class="relative flex flex-col items-center cursor-pointer"
@@ -89,6 +90,19 @@ onUnmounted(() => document.removeEventListener('keydown', preventEscape))
             |
           </div>
         </div>
+      </div>
+      <div v-else class="space-y-3">
+        <label class="flex items-center gap-2">
+          <span>{{ t('admin.batchBoundary') }}</span>
+          <input v-model="boundaryInput" type="number" min="1" :max="props.totalNumber - 1" step="1" class="input input-bordered input-sm w-28">
+          <button type="button" class="btn btn-sm" :disabled="!Number.isSafeInteger(boundaryInput) || boundaryInput < 1 || boundaryInput >= props.totalNumber" @click="editScale(boundaryInput)">{{ t('admin.toggleBoundary') }}</button>
+        </label>
+        <p class="text-sm">
+          {{ t('admin.batchSummary', { count: scaleList.length - 1, total: props.totalNumber }) }}
+        </p>
+        <p class="break-words text-sm">
+          {{ scaleList.slice(1, 101).map((end, index) => end - scaleList[index]).join(' + ') }}{{ scaleList.length > 101 ? ' …' : '' }}
+        </p>
       </div>
       <div class="modal-action">
         <form method="dialog">

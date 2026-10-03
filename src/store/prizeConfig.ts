@@ -1,12 +1,14 @@
 import type { IPrizeConfig } from '@/types/storeType'
 import { defineStore } from 'pinia'
+import { safeConfigStorage } from '@/utils/persistence'
+import { isDrawablePrize } from '@/utils/validation'
 import { defaultCurrentPrize, defaultPrizeList, defaultTemporaryPrize } from './data'
 
 function clone<T>(val: T): T {
   return structuredClone(val)
 }
 
-function createDefaultPrizeConfig() {
+export function createDefaultPrizeConfig() {
   return {
     prizeList: clone(defaultPrizeList),
     currentPrize: clone(defaultCurrentPrize),
@@ -84,8 +86,15 @@ export const usePrizeConfig = defineStore('prize', {
     setNoCurrentPrize() {
       this.prizeConfig.currentPrize = clone(defaultTemporaryPrize)
     },
-    selectNextAvailablePrize() {
-      const nextPrize = this.prizeConfig.prizeList.find(prize => prize.isShow && !prize.isUsed)
+    selectNextAvailablePrize(preferTemporary = false) {
+      if (preferTemporary && this.prizeConfig.temporaryPrize.isShow
+        && (this.prizeConfig.temporaryPrize.isUsed || this.prizeConfig.temporaryPrize.isUsedCount >= this.prizeConfig.temporaryPrize.count)) {
+        this.resetTemporaryPrize()
+      }
+      const temporary = this.prizeConfig.temporaryPrize
+      const nextPrize = preferTemporary && isDrawablePrize(temporary)
+        ? temporary
+        : this.prizeConfig.prizeList.find(isDrawablePrize)
       if (nextPrize) {
         this.setCurrentPrize(nextPrize)
       }
@@ -118,7 +127,9 @@ export const usePrizeConfig = defineStore('prize', {
       }
 
       if (reopenedPrize) {
-        this.setCurrentPrize(reopenedPrize)
+        if (isDrawablePrize(reopenedPrize))
+          this.setCurrentPrize(reopenedPrize)
+        else this.selectNextAvailablePrize(true)
       }
     },
     // 设置临时奖项
@@ -172,7 +183,7 @@ export const usePrizeConfig = defineStore('prize', {
     strategies: [
       {
         // 如果要存储在localStorage中
-        storage: localStorage,
+        storage: safeConfigStorage,
         key: 'prizeConfig',
       },
     ],

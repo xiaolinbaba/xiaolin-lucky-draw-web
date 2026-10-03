@@ -1,16 +1,20 @@
 <script setup lang='ts'>
 import daisyuiThemes from 'daisyui/src/theming/themes'
 
-import localforage from 'localforage'
 import { storeToRefs } from 'pinia'
 import { ref, watch } from 'vue'
 import { ColorPicker } from 'vue3-colorpicker'
 import { useI18n } from 'vue-i18n'
-import zod from 'zod'
-import i18n, { languageList } from '@/locales/i18n'
+import ConfirmDialog from '@/components/ConfirmDialog/index.vue'
+import DataBackup from '@/components/DataBackup/index.vue'
+import { languageList } from '@/locales/i18n'
 import useStore from '@/store'
+import { createDefaultGlobalConfig } from '@/store/globalConfig'
+import { createDefaultPrizeConfig } from '@/store/prizeConfig'
 import { themeChange } from '@/utils'
+import { createBackup, downloadBlob, restoreBackup, validateBackup } from '@/utils/backup'
 import { isHex, isRgbOrRgba } from '@/utils/color'
+import { isIntegerInRange, numericLimits } from '@/utils/validation'
 import PatternSetting from './components/PatternSetting.vue'
 import 'vue3-colorpicker/style.css'
 
@@ -44,23 +48,14 @@ const formData = ref({
 })
 const formErr = ref({
   rowCount: '',
+  cardWidth: '',
+  cardHeight: '',
+  textSize: '',
 })
-const schema = zod.object({
-  rowCount: zod.number({
-    required_error: i18n.global.t('error.require'),
-    invalid_type_error: i18n.global.t('error.requireNumber'),
-  })
-    .min(1, i18n.global.t('error.minNumber1'))
-    .max(100, i18n.global.t('error.maxNumber100')),
-  // 格式化
-
-})
-type ValidatePayload = zod.infer<typeof schema>
-const payload: ValidatePayload = {
-  rowCount: formData.value.rowCount,
-}
-function parseSchema(props: ValidatePayload) {
-  return schema.parseAsync(props)
+function validateNumber(field: keyof typeof formErr.value, value: unknown) {
+  const [min, max] = numericLimits[field]
+  formErr.value[field] = isIntegerInRange(value, min, max) ? '' : t('error.integerRange', { min, max })
+  return !formErr.value[field]
 }
 
 function resetPersonLayout() {
@@ -79,18 +74,9 @@ function resetPattern() {
 }
 
 async function resetData() {
-  globalConfig.reset()
-  personConfig.reset()
-  prizeConfig.resetDefault()
-  await Promise.allSettled([
-    localforage.createInstance({ name: 'imgStore' }).clear(),
-    localforage.createInstance({ name: 'audioStore' }).clear(),
-  ])
-  // 同时清理持久化缓存，避免旧数据在 reload 后被重新 hydrate
-  localStorage.removeItem('globalConfig')
-  localStorage.removeItem('personConfig')
-  localStorage.removeItem('prizeConfig')
-  // 刷新页面
+  const previous = await createBackup({ globalConfig: globalConfig.globalConfig }, { personConfig: personConfig.personConfig }, { prizeConfig: prizeConfig.prizeConfig })
+  downloadBlob(previous, `luck-before-reset-${Date.now()}.json`)
+  await restoreBackup(validateBackup({ format: 'luck-backup', version: 1, createdAt: new Date().toISOString(), global: createDefaultGlobalConfig(), people: { personConfig: { allPersonList: [], alreadyPersonList: [] } }, prizes: { prizeConfig: createDefaultPrizeConfig() }, images: [], audio: [] }))
   window.location.reload()
 }
 
@@ -102,17 +88,14 @@ async function resetData() {
 //     })
 // }
 
-watch(() => formData.value.rowCount, () => {
-  payload.rowCount = formData.value.rowCount
-  parseSchema(payload).then((res) => {
-    if (res.rowCount) {
-      formErr.value.rowCount = ''
-      isRowCountChange.value = 1
-      globalConfig.setRowCount(res.rowCount)
-    }
-  }).catch((err) => {
-    formErr.value.rowCount = err.issues[0].message
-  })
+watch(() => formData.value.rowCount, (value) => {
+  if (validateNumber('rowCount', value)) {
+    isRowCountChange.value = 1
+    globalConfig.setRowCount(value)
+  }
+  else {
+    isRowCountChange.value = 0
+  }
 })
 
 watch(topTitleValue, (val) => {
@@ -141,8 +124,15 @@ watch(textColorValue, (val: string) => {
 }, { deep: true })
 
 watch(cardSizeValue, (val: { width: number, height: number }) => {
-  globalConfig.setCardSize(val)
+  const widthValid = validateNumber('cardWidth', val.width)
+  const heightValid = validateNumber('cardHeight', val.height)
+  if (widthValid && heightValid)
+    globalConfig.setCardSize({ ...val })
 }, { deep: true })
+watch(textSizeValue, (val) => {
+  if (validateNumber('textSize', val))
+    globalConfig.setTextSize(val)
+})
 
 watch(isShowPrizeListValue, () => {
   globalConfig.setIsShowPrizeList(isShowPrizeListValue.value)
@@ -157,33 +147,14 @@ watch(languageValue, (val) => {
 
 <template>
   <div class="config-page">
-    <dialog ref="resetDataDialogRef" class="border-none modal">
-      <div class="modal-box">
-        <h3 class="text-lg font-bold">
-          {{ t('dialog.titleTip') }}
-        </h3>
-        <p class="py-4">
-          {{ t('dialog.dialogResetAllData') }}
-        </p>
-        <div class="modal-action">
-          <form method="dialog" class="flex gap-3">
-            <button class="btn btn-ghost" @click="resetDataDialogRef.close()">
-              {{ t('button.cancel') }}
-            </button>
-            <button class="btn btn-error" @click="resetData">
-              {{ t('button.confirm') }}
-            </button>
-          </form>
-        </div>
-      </div>
-    </dialog>
+    <ConfirmDialog ref="resetDataDialogRef" />
 
     <section class="config-section">
       <header class="config-section-header">
         <h2 class="config-section-title">
           {{ t('admin.section.basicSettings') }}
         </h2>
-        <button class="btn btn-error btn-outline btn-sm" @click="resetDataDialogRef.showModal()">
+        <button class="btn btn-error btn-outline btn-sm" @click="resetDataDialogRef.open(t('dialog.dialogResetAllData'), resetData)">
           {{ t('button.resetAllData') }}
         </button>
       </header>
@@ -196,7 +167,7 @@ watch(languageValue, (val) => {
         <label class="config-field">
           <span class="label"><span class="label-text">{{ t('table.columnNumber') }}</span></span>
           <div class="flex items-center gap-2">
-            <input v-model="formData.rowCount" type="number" class="input input-bordered min-w-0 flex-1">
+            <input v-model="formData.rowCount" type="number" min="1" max="100" step="1" :aria-invalid="!!formErr.rowCount" class="input input-bordered min-w-0 flex-1">
             <span class="tooltip" :data-tip="t('tooltip.resetLayout')">
               <button class="btn btn-primary btn-sm whitespace-nowrap" :disabled="isRowCountChange !== 1" @click.prevent="resetPersonLayout">
                 <span>{{ t('button.setLayout') }}</span>
@@ -253,15 +224,18 @@ watch(languageValue, (val) => {
         </label>
         <label class="config-field">
           <span class="label"><span class="label-text">{{ t('table.cardWidth') }}</span></span>
-          <input v-model="cardSizeValue.width" type="number" class="input input-bordered w-full">
+          <input v-model="cardSizeValue.width" type="number" min="20" max="1000" step="1" :aria-invalid="!!formErr.cardWidth" class="input input-bordered w-full">
+          <span v-if="formErr.cardWidth" role="alert" class="text-sm text-error">{{ formErr.cardWidth }}</span>
         </label>
         <label class="config-field">
           <span class="label"><span class="label-text">{{ t('table.cardHeight') }}</span></span>
-          <input v-model="cardSizeValue.height" type="number" class="input input-bordered w-full">
+          <input v-model="cardSizeValue.height" type="number" min="20" max="1000" step="1" :aria-invalid="!!formErr.cardHeight" class="input input-bordered w-full">
+          <span v-if="formErr.cardHeight" role="alert" class="text-sm text-error">{{ formErr.cardHeight }}</span>
         </label>
         <label class="config-field">
           <span class="label"><span class="label-text">{{ t('table.textSize') }}</span></span>
-          <input v-model="textSizeValue" type="number" class="input input-bordered w-full">
+          <input v-model="textSizeValue" type="number" min="8" max="200" step="1" :aria-invalid="!!formErr.textSize" class="input input-bordered w-full">
+          <span v-if="formErr.textSize" role="alert" class="text-sm text-error">{{ formErr.textSize }}</span>
         </label>
       </div>
     </section>
@@ -303,6 +277,7 @@ watch(languageValue, (val) => {
         </label>
       </div>
     </section>
+    <DataBackup />
   </div>
 </template>
 

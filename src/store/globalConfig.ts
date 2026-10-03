@@ -2,6 +2,7 @@ import type { IImage, IMusic } from '@/types/storeType'
 import { defineStore } from 'pinia'
 import { DEFAULT_TOP_TITLE } from '@/constants/app'
 import i18n, { browserLanguage, type Language } from '@/locales/i18n'
+import { safeConfigStorage } from '@/utils/persistence'
 import { defaultImageList, defaultMusicList, defaultPatternList } from './data'
 // import { IPrizeConfig } from '@/types/storeType';
 
@@ -9,7 +10,7 @@ function clone<T>(val: T): T {
   return structuredClone(val)
 }
 
-function createDefaultGlobalConfig() {
+export function createDefaultGlobalConfig() {
   const musicList = clone(defaultMusicList) as IMusic[]
   const imageList = clone(defaultImageList) as IImage[]
   return {
@@ -30,7 +31,7 @@ function createDefaultGlobalConfig() {
         textSize: 30,
         patternColor: '#1b66c9',
         patternList: clone(defaultPatternList) as number[],
-        background: {}, // 背景颜色或图片
+        background: {} as Partial<IImage>, // 背景颜色或图片
       },
       musicList,
       imageList,
@@ -190,9 +191,9 @@ export const useGlobalConfig = defineStore('global', {
       }
     },
     // 设置当前播放音乐
-    setCurrentMusic(musicItem: IMusic, paused: boolean = true) {
+    setCurrentMusic(musicItem: IMusic | undefined, paused: boolean = true) {
       this.currentMusic = {
-        item: musicItem,
+        item: musicItem ?? { id: '', name: '', url: '' },
         paused,
       }
     },
@@ -259,7 +260,7 @@ export const useGlobalConfig = defineStore('global', {
     strategies: [
       {
         // 如果要存储在localStorage中
-        storage: localStorage,
+        storage: safeConfigStorage,
         key: 'globalConfig',
         paths: ['globalConfig'],
       },

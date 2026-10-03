@@ -4,11 +4,15 @@ import localforage from 'localforage'
 import { storeToRefs } from 'pinia'
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import ConfirmDialog from '@/components/ConfirmDialog/index.vue'
+import { useStorageFeedback } from '@/hooks/useStorageFeedback'
 
 import useStore from '@/store'
 import { readFileData } from '@/utils/file'
 
 const { t } = useI18n()
+const { storageError, storageUsage, busy, run } = useStorageFeedback()
+const confirmDialog = ref<InstanceType<typeof ConfirmDialog>>()
 const audioUploadToast = ref(0) // 0是不显示，1是成功，2是失败,3是不是图片
 const maxAudioFileSize = 50 * 1024 * 1024
 let toastTimer: ReturnType<typeof setTimeout> | undefined
@@ -23,20 +27,31 @@ async function play(item: IMusic) {
   globalConfig.setCurrentMusic(item, false)
 }
 
-function deleteMusic(item: IMusic) {
-  globalConfig.removeMusic(item.id)
-  void audioDbStore.removeItem(item.name)
-  // setTimeout(()=>{
-  //     localMusicListValue.value=localMusicList
-  // },100)
+async function deleteMusic(item: IMusic) {
+  try {
+    await run(async () => {
+      if (item.url === 'Storage')
+        await audioDbStore.removeItem(item.name)
+      globalConfig.removeMusic(item.id)
+      if (globalConfig.currentMusic.item?.id === item.id)
+        globalConfig.setCurrentMusic(localMusicList.value[0], true)
+    })
+  }
+  catch { /* Keep the list entry so deletion can be retried. */ }
 }
-function resetMusic() {
-  globalConfig.resetMusicList()
-  void audioDbStore.clear()
+async function resetMusic() {
+  await run(async () => {
+    await audioDbStore.clear()
+    globalConfig.resetMusicList()
+    globalConfig.setCurrentMusic(localMusicList.value[0], true)
+  })
 }
-function deleteAll() {
-  globalConfig.clearMusicList()
-  void audioDbStore.clear()
+async function deleteAll() {
+  await run(async () => {
+    await audioDbStore.clear()
+    globalConfig.clearMusicList()
+    globalConfig.setCurrentMusic(localMusicList.value[0], true)
+  })
 }
 async function getMusicDbStore() {
   const keys = await audioDbStore.keys()
@@ -73,9 +88,11 @@ async function handleFileChange(e: Event) {
 
   try {
     const { dataUrl, fileName } = await readFileData(file)
-    await audioDbStore.setItem(`${new Date().getTime().toString()}+${fileName}`, dataUrl)
+    await run(async () => {
+      await audioDbStore.setItem(`${new Date().getTime().toString()}+${fileName}`, dataUrl)
+      await getMusicDbStore()
+    })
     audioUploadToast.value = 1
-    await getMusicDbStore()
   }
   catch (error) {
     console.error('Failed to store audio', error)
@@ -87,7 +104,7 @@ async function handleFileChange(e: Event) {
 }
 
 onMounted(() => {
-  void getMusicDbStore()
+  void run(getMusicDbStore).catch(() => {})
 })
 watch(audioUploadToast, (value) => {
   if (value !== 0) {
@@ -118,16 +135,21 @@ onUnmounted(() => clearTimeout(toastTimer))
     </div>
     <div class="config-toolbar">
       <label for="music-upload" class="btn btn-primary btn-sm cursor-pointer">{{ t('button.upload') }}</label>
-      <input id="music-upload" type="file" class="hidden" :accept="limitType" @change="handleFileChange">
-      <button class="btn btn-warning btn-outline btn-sm" @click="resetMusic">
+      <input id="music-upload" type="file" class="hidden" :accept="limitType" :disabled="busy" @change="handleFileChange">
+      <button class="btn btn-warning btn-outline btn-sm" :disabled="busy" @click="confirmDialog?.open(t('dialog.resetMusic'), resetMusic)">
         {{ t('button.reset') }}
       </button>
-      <button class="btn btn-error btn-outline btn-sm" @click="deleteAll">
+      <button class="btn btn-error btn-outline btn-sm" :disabled="busy" @click="confirmDialog?.open(t('dialog.deleteMusic', { count: localMusicList.length }), deleteAll)">
         {{ t('button.allDelete') }}
       </button>
       <span class="ml-auto text-sm text-base-content/60">{{ t('admin.itemCount', { count: localMusicList.length }) }}</span>
     </div>
-
+    <p v-if="storageUsage" class="text-sm text-base-content/60">
+      {{ storageUsage }}
+    </p>
+    <p v-if="storageError" role="alert" class="alert alert-error">
+      {{ storageError }}
+    </p>
     <section class="config-section">
       <header class="config-section-header">
         <h2 class="config-section-title">
@@ -151,13 +173,14 @@ onUnmounted(() => clearTimeout(toastTimer))
             <button class="btn btn-primary btn-outline btn-xs" @click="play(item)">
               {{ t('button.play') }}
             </button>
-            <button class="btn btn-error btn-outline btn-xs" @click="deleteMusic(item)">
+            <button class="btn btn-error btn-outline btn-xs" :disabled="busy" @click="deleteMusic(item)">
               {{ t('button.delete') }}
             </button>
           </div>
         </li>
       </ul>
     </section>
+    <ConfirmDialog ref="confirmDialog" />
   </div>
 </template>
 

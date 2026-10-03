@@ -7,7 +7,9 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    ConfirmDialog: typeof import('./components/ConfirmDialog/index.vue')['default']
     DaiysuiTable: typeof import('./components/DaiysuiTable/index.vue')['default']
+    DataBackup: typeof import('./components/DataBackup/index.vue')['default']
     EditSeparateDialog: typeof import('./components/NumberSeparate/EditSeparateDialog.vue')['default']
     ImageSync: typeof import('./components/ImageSync/index.vue')['default']
     PlayMusic: typeof import('./components/PlayMusic/index.vue')['default']
