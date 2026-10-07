@@ -5,7 +5,6 @@ import { useI18n } from 'vue-i18n'
 import PlayMusic from '@/components/PlayMusic/index.vue'
 import useStore from '@/store'
 import { themeChange } from '@/utils'
-import { persistenceIssue } from '@/utils/persistence'
 
 const { t } = useI18n()
 const globalConfig = useStore().globalConfig
@@ -71,12 +70,6 @@ onMounted(() => {
     </div>
   </dialog>
   <router-view />
-  <div v-if="persistenceIssue" role="alert" class="fixed bottom-20 left-4 right-4 z-50 alert alert-warning">
-    <span>{{ t(persistenceIssue) }}</span>
-    <router-link to="/config/global/face" class="btn btn-sm">
-      {{ t('admin.backup') }}
-    </router-link>
-  </div>
   <PlayMusic />
 </template>
 

@@ -87,6 +87,17 @@ export const configRoutesChildren = [
       icon: 'menu',
     },
   },
+  // 8. 点赞捐赠
+  {
+    path: '/config/support',
+    name: 'Support',
+    component: () => import('@/views/Config/Support/index.vue'),
+    meta: {
+      titleKey: 'sidebar.support',
+      descriptionKey: 'admin.description.support',
+      icon: 'heart',
+    },
+  },
 ]
 
 // 使用根路径路由配置（适用于 file 模式和 Cloudflare Workers 部署）

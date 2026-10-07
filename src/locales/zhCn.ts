@@ -38,6 +38,7 @@ export default {
     imagesManagement: '图片管理',
     musicManagement: '音乐管理',
     operatingInstructions: '操作说明',
+    support: '点赞捐赠',
   },
   admin: {
     batchBoundary: '分批分界人数',
@@ -77,7 +78,18 @@ export default {
       imagesManagement: '管理奖项和背景可使用的本地图片。',
       musicManagement: '管理抽奖过程中播放的背景音乐。',
       operatingInstructions: '查看名单导入、奖项设置和抽奖操作说明。',
+      support: '如果 Luck 对你有帮助，欢迎为项目点赞或支持持续维护。',
     },
+  },
+  support: {
+    githubTitle: '在 GitHub 支持项目',
+    githubDescription: '喜欢这个项目？欢迎在 GitHub 点亮一颗 Star，让更多人发现 Luck。也欢迎 Fork 项目，按自己的需要改进，或一起参与开发。',
+    githubButton: '前往 GitHub · Star / Fork',
+    donationTitle: '微信捐赠',
+    donationDescription: '如果这个项目为你的活动带来了便利，欢迎自愿捐赠。捐赠费用将用于本项目的持续维护与改进。',
+    qrAlt: '项目作者的微信收款二维码',
+    scanHint: '使用微信扫一扫，或保存二维码后在微信中识别。',
+    thanks: '感谢每一份支持，也感谢你使用 Luck！',
   },
   viewTitle: {
     personManagement: '人员管理',

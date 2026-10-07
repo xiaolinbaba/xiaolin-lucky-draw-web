@@ -38,6 +38,7 @@ export default {
     imagesManagement: 'Images Management',
     musicManagement: 'Music Management',
     operatingInstructions: 'Operating Instructions',
+    support: 'Star & Donate',
   },
   admin: {
     batchBoundary: 'Batch boundary',
@@ -77,7 +78,18 @@ export default {
       imagesManagement: 'Manage local images used for prizes and backgrounds.',
       musicManagement: 'Manage background music played during the draw.',
       operatingInstructions: 'Review instructions for imports, prizes, and running a draw.',
+      support: 'If Luck helps you, give it a star or support its ongoing maintenance.',
     },
+  },
+  support: {
+    githubTitle: 'Support the project on GitHub',
+    githubDescription: 'Enjoying Luck? Give it a Star on GitHub to help others discover it. You are also welcome to Fork the project, adapt it to your needs, or contribute to development.',
+    githubButton: 'Visit GitHub · Star / Fork',
+    donationTitle: 'Donate with WeChat',
+    donationDescription: 'If this project has made your event easier, you are welcome to make a voluntary donation. Donations will support its ongoing maintenance and improvements.',
+    qrAlt: 'Project author’s WeChat payment QR code',
+    scanHint: 'Scan with WeChat, or save the QR code and open it in WeChat.',
+    thanks: 'Thank you for your support and for using Luck!',
   },
   viewTitle: {
     personManagement: 'Person Management',
