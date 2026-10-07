@@ -2,7 +2,7 @@
 import type { IMusic } from '@/types/storeType'
 import localforage from 'localforage'
 import { storeToRefs } from 'pinia'
-import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ConfirmDialog from '@/components/ConfirmDialog/index.vue'
 import { useStorageFeedback } from '@/hooks/useStorageFeedback'
@@ -12,7 +12,7 @@ import { readFileData } from '@/utils/file'
 import { isBundledMusic } from '@/utils/music'
 
 const { t } = useI18n()
-const { storageError, storageUsage, busy, run } = useStorageFeedback()
+const { storageError, busy, run } = useStorageFeedback()
 const confirmDialog = ref<InstanceType<typeof ConfirmDialog>>()
 const audioUploadToast = ref(0) // 0是不显示，1是成功，2是失败,3是不是图片
 const maxAudioFileSize = 50 * 1024 * 1024
@@ -22,7 +22,22 @@ const audioDbStore = localforage.createInstance({
 })
 const globalConfig = useStore().globalConfig
 
-const { getMusicList: localMusicList } = storeToRefs(globalConfig)
+const { getMusicList: localMusicList, getMusicVolume: musicVolume, getMusicMuted: musicMuted } = storeToRefs(globalConfig)
+const muted = computed(() => musicMuted.value || musicVolume.value === 0)
+function changeVolume(event: Event) {
+  globalConfig.setMusicVolume(Number((event.target as HTMLInputElement).value))
+  globalConfig.setMusicMuted(false)
+}
+function toggleMute() {
+  if (muted.value) {
+    if (musicVolume.value === 0)
+      globalConfig.setMusicVolume(100)
+    globalConfig.setMusicMuted(false)
+  }
+  else {
+    globalConfig.setMusicMuted(true)
+  }
+}
 const limitType = ref('audio/*')
 async function play(item: IMusic) {
   globalConfig.setCurrentMusic(item, false)
@@ -135,7 +150,7 @@ onUnmounted(() => clearTimeout(toastTimer))
       </div>
     </div>
     <div class="config-toolbar">
-      <label for="music-upload" class="btn btn-primary btn-sm cursor-pointer">{{ t('button.upload') }}</label>
+      <label for="music-upload" class="btn btn-primary btn-sm cursor-pointer">{{ t('admin.addLocalMusic') }}</label>
       <input id="music-upload" type="file" class="hidden" :accept="limitType" :disabled="busy" @change="handleFileChange">
       <button class="btn btn-warning btn-outline btn-sm" :disabled="busy" @click="confirmDialog?.open(t('dialog.resetMusic'), resetMusic)">
         {{ t('button.reset') }}
@@ -145,9 +160,33 @@ onUnmounted(() => clearTimeout(toastTimer))
       </button>
       <span class="ml-auto text-sm text-base-content/60">{{ t('admin.itemCount', { count: localMusicList.length }) }}</span>
     </div>
-    <p v-if="storageUsage" class="text-sm text-base-content/60">
-      {{ storageUsage }}
-    </p>
+    <div class="rounded-xl border border-base-content/10 bg-base-200/40 p-4">
+      <div class="flex flex-wrap items-center gap-3">
+        <label for="music-volume" class="text-sm font-medium">{{ t('admin.musicVolume') }}</label>
+        <button
+          type="button" class="btn btn-ghost btn-square btn-sm"
+          :aria-label="muted ? t('button.unmute') : t('button.mute')" :title="muted ? t('button.unmute') : t('button.mute')"
+          :aria-pressed="muted" @click="toggleMute"
+        >
+          <svg aria-hidden="true" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 5 6 9H3v6h3l5 4V5Z" />
+            <path v-if="muted" d="m17 9 5 6m0-6-5 6" />
+            <path v-else d="M15.5 8.5a5 5 0 0 1 0 7m3-10a9 9 0 0 1 0 13" />
+          </svg>
+        </button>
+        <input
+          id="music-volume" type="range" min="0" max="100" step="1" :value="musicVolume"
+          class="range range-primary range-xs w-36 sm:w-48" :aria-valuetext="`${musicVolume}%`" @input="changeVolume"
+        >
+        <output for="music-volume" class="min-w-10 text-sm tabular-nums">{{ musicVolume }}%</output>
+      </div>
+      <p class="mb-0 mt-3 text-sm leading-relaxed text-base-content/60">
+        {{ t('admin.musicLocalHint') }}
+      </p>
+      <p class="mb-0 mt-1 text-sm leading-relaxed text-base-content/60">
+        {{ t('admin.musicResetHint') }}
+      </p>
+    </div>
     <p v-if="storageError" role="alert" class="alert alert-error">
       {{ storageError }}
     </p>

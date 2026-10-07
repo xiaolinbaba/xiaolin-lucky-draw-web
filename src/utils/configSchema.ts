@@ -59,6 +59,8 @@ export const configSchemas = {
       background: media.partial(),
     }),
     musicList: z.array(media).max(1000),
+    musicVolume: integer(0, 100).default(100),
+    musicMuted: z.boolean().default(false),
     imageList: z.array(media).max(1000),
   }) }),
   personConfig: z.object({ personConfig: z.object({

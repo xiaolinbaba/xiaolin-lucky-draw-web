@@ -10,7 +10,7 @@ import useStore from '@/store'
 import { readFileData } from '@/utils/file'
 
 const { t } = useI18n()
-const { storageError, storageUsage, busy, run } = useStorageFeedback()
+const { storageError, busy, run } = useStorageFeedback()
 const globalConfig = useStore().globalConfig
 const prizeConfig = useStore().prizeConfig
 const { getImageList: localImageList } = storeToRefs(globalConfig)
@@ -122,9 +122,6 @@ onUnmounted(() => clearTimeout(toastTimer))
       <input id="image-upload" type="file" class="hidden" :accept="limitType" :disabled="busy" @change="handleFileChange">
       <span class="ml-auto text-sm text-base-content/60">{{ t('admin.itemCount', { count: localImageList.length }) }}</span>
     </div>
-    <p v-if="storageUsage" class="text-sm text-base-content/60">
-      {{ storageUsage }}
-    </p>
     <p v-if="storageError" role="alert" class="alert alert-error">
       {{ storageError }}
     </p>

@@ -35,6 +35,8 @@ export function createDefaultGlobalConfig() {
         background: {} as Partial<IImage>, // 背景颜色或图片
       },
       musicList,
+      musicVolume: 100,
+      musicMuted: false,
       imageList,
     },
     currentMusic: {
@@ -98,6 +100,12 @@ export const useGlobalConfig = defineStore('global', {
     // 获取当前音乐
     getCurrentMusic(state) {
       return state.currentMusic
+    },
+    getMusicVolume(state) {
+      return state.globalConfig.musicVolume
+    },
+    getMusicMuted(state) {
+      return state.globalConfig.musicMuted
     },
     // 获取图片列表
     getImageList(state) {
@@ -197,6 +205,13 @@ export const useGlobalConfig = defineStore('global', {
     repairDefaultMusicUrls() {
       for (const track of this.globalConfig.musicList)
         track.url = resolveMusicUrl(track.url)
+    },
+    setMusicVolume(volume: number) {
+      if (Number.isFinite(volume))
+        this.globalConfig.musicVolume = Math.max(0, Math.min(100, Math.round(volume)))
+    },
+    setMusicMuted(muted: boolean) {
+      this.globalConfig.musicMuted = muted
     },
     // 重置音乐列表
     resetMusicList() {

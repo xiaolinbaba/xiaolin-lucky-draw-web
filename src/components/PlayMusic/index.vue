@@ -22,7 +22,7 @@ let loadedUrl = ''
 let playRequest = 0
 let cancelPendingPlay: (() => void) | undefined
 const globalConfig = useStore().globalConfig
-const { getMusicList: localMusicList, getCurrentMusic: currentMusic } = storeToRefs(globalConfig)
+const { getMusicList: localMusicList, getCurrentMusic: currentMusic, getMusicVolume: musicVolume, getMusicMuted: musicMuted } = storeToRefs(globalConfig)
 
 function failPlayback(item: IMusic, key: string) {
   globalConfig.setCurrentMusic(item, true)
@@ -127,6 +127,7 @@ function toggleFullscreen() {
 }
 
 onMounted(() => {
+  syncVolume()
   globalConfig.repairDefaultMusicUrls()
   globalConfig.setCurrentMusic(localMusicList.value[0], true)
 
@@ -136,6 +137,13 @@ onMounted(() => {
 function handleFullscreenChange() {
   isFullscreen.value = !!document.fullscreenElement
 }
+function syncVolume() {
+  if (audio.value) {
+    audio.value.volume = musicVolume.value / 100
+    audio.value.muted = musicMuted.value
+  }
+}
+watch([musicVolume, musicMuted], syncVolume, { flush: 'sync' })
 
 onBeforeUnmount(() => {
   playRequest++

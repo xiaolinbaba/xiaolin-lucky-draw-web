@@ -23,15 +23,46 @@ describe('audio playback lifecycle', () => {
     vi.useRealTimers()
   })
 
-  function setup(tracks?: IMusic[]) {
+  function setup(tracks?: IMusic[], volume?: number, muted = false) {
     const pinia = createPinia()
     setActivePinia(pinia)
     const store = useGlobalConfig()
+    if (volume !== undefined) {
+      store.setMusicVolume(volume)
+      store.setMusicMuted(muted)
+    }
     if (tracks)
       store.globalConfig.musicList = tracks
     const wrapper = mount(PlayMusic, { global: { plugins: [pinia, i18n], stubs: { 'svg-icon': true } } })
     return { wrapper, store }
   }
+
+  it('applies saved volume and mute preferences before playback', () => {
+    const { wrapper } = setup(undefined, 35, true)
+    const audio = wrapper.get('audio').element as HTMLAudioElement
+    expect(audio.volume).toBe(0.35)
+    expect(audio.muted).toBe(true)
+    expect(HTMLMediaElement.prototype.play).not.toHaveBeenCalled()
+    wrapper.unmount()
+  })
+
+  it('adjusts and mutes a playing track without restarting it', async () => {
+    const { wrapper, store } = setup()
+    store.setCurrentMusic(store.getMusicList[0], false)
+    await flushPromises()
+    const audio = wrapper.get('audio').element as HTMLAudioElement
+    audio.currentTime = 42
+    store.setMusicVolume(25)
+    store.setMusicMuted(true)
+    expect(audio.volume).toBe(0.25)
+    expect(audio.muted).toBe(true)
+    store.setMusicMuted(false)
+    expect(audio.muted).toBe(false)
+    expect(audio.currentTime).toBe(42)
+    expect(HTMLMediaElement.prototype.play).toHaveBeenCalledTimes(1)
+    expect(store.currentMusic.paused).toBe(false)
+    wrapper.unmount()
+  })
 
   it('repairs an existing playlist while keeping track IDs and uploaded entries', () => {
     const tracks = [

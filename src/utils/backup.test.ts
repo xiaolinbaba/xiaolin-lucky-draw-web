@@ -44,6 +44,19 @@ describe('backup restoration and damaged storage', () => {
     expect(() => validateBackup(unsafe)).toThrow()
     expect(({} as any).polluted).toBeUndefined()
   })
+  it('reads older backups and saved events without resetting their configuration', () => {
+    const old = fixture()
+    old.global.globalConfig.topTitle = 'Existing event'
+    delete old.global.globalConfig.musicVolume
+    delete old.global.globalConfig.musicMuted
+    localStorage.setItem('globalConfig', JSON.stringify(old.global))
+    const restored = JSON.parse(safeConfigStorage.getItem('globalConfig')!)
+    expect(restored.globalConfig.topTitle).toBe('Existing event')
+    expect(restored.globalConfig.musicList).toEqual(old.global.globalConfig.musicList)
+    expect(restored.globalConfig.musicVolume).toBe(100)
+    expect(restored.globalConfig.musicMuted).toBe(false)
+    expect(validateBackup(old).global.globalConfig).toEqual(restored.globalConfig)
+  })
   it('rejects missing media references', () => {
     const backup = fixture()
     backup.global.globalConfig.imageList.push({ id: 'missing', name: 'missing', url: 'Storage' })
