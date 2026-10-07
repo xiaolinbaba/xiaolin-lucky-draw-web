@@ -63,6 +63,7 @@ export default {
     itemCount: '{count} items',
     localFile: 'Local file',
     remoteFile: 'Remote audio',
+    bundledAudio: 'Built-in music',
     current: 'Current prize',
     section: {
       basicSettings: 'Basic Settings',
@@ -173,6 +174,9 @@ export default {
     exitFullscreen: 'Exit Fullscreen',
   },
   error: {
+    audioMissing: 'The local music file is missing. Upload it again in Music Management.',
+    audioPlayback: 'Unable to play music. Retry or choose another track in Music Management.',
+    audioBlocked: 'Your browser blocked playback. Click the play button again.',
     restoreRollback: 'Writing failed and previous data could not be fully restored. Keep both the original backup and the automatically downloaded copy, then reload and restore the event you need.',
     integerRange: 'Enter an integer from {min} to {max}. The last valid setting is kept.',
     invalidDraw: 'Invalid prize quantity or batch progress. Check the prize configuration.',

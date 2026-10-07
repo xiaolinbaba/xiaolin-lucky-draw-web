@@ -1,10 +1,12 @@
 <script setup lang='ts'>
+import type { IMusic } from '@/types/storeType'
 import localforage from 'localforage'
 import { storeToRefs } from 'pinia'
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import useStore from '@/store'
+import { resolveMusicUrl } from '@/utils/music'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -13,64 +15,77 @@ const isConfigRoute = computed(() => route.path.includes('/config'))
 const audioDbStore = localforage.createInstance({
   name: 'audioStore',
 })
-const audio = ref(new Audio())
+const audio = ref<HTMLAudioElement>()
+const loading = ref(false)
+const playbackError = ref('')
+let loadedUrl = ''
 let playRequest = 0
-const settingRef = ref()
-// const audio = ref(new Audio())
+let cancelPendingPlay: (() => void) | undefined
 const globalConfig = useStore().globalConfig
 const { getMusicList: localMusicList, getCurrentMusic: currentMusic } = storeToRefs(globalConfig)
-// const localMusicListValue = ref(localMusicList)
 
-async function play(item: any, request: number) {
-  if (!item) {
+function failPlayback(item: IMusic, key: string) {
+  globalConfig.setCurrentMusic(item, true)
+  playbackError.value = key
+}
+async function play(item: IMusic, request: number) {
+  const element = audio.value
+  if (!element)
     return
-  }
-  // if (!audio.value.paused && !skip) {
-  //     audio.value.pause()
-
-  //     return
-  // }
-  let audioUrl = ''
-  if (!item.url) {
-    return
-  }
+  let timeout: ReturnType<typeof setTimeout> | undefined
+  let cancelWait: (() => void) | undefined
+  loading.value = true
   try {
-    if (item.url === 'Storage') {
-      audioUrl = await audioDbStore.getItem(item.name) as string
-    }
-    else {
-      audioUrl = item.url
-    }
+    const audioUrl = item.url === 'Storage'
+      ? await audioDbStore.getItem<string>(item.name)
+      : resolveMusicUrl(item.url)
     // A previous storage read may finish after pause, next-track, or unmount.
-    if (request !== playRequest) {
+    if (request !== playRequest)
+      return
+    if (!audioUrl) {
+      failPlayback(item, item.url === 'Storage' ? 'error.audioMissing' : 'tooltip.noSongPlay')
       return
     }
-    audio.value.pause()
-    audio.value.src = audioUrl
-    await audio.value.play()
+    // Preserve the current position when resuming the same track.
+    if (loadedUrl !== audioUrl || element.error) {
+      element.pause()
+      element.src = audioUrl
+      loadedUrl = audioUrl
+    }
+    const loadingLimit = new Promise<void>((resolve, reject) => {
+      cancelWait = () => {
+        clearTimeout(timeout)
+        resolve()
+      }
+      cancelPendingPlay = cancelWait
+      timeout = setTimeout(() => reject(new Error('Audio loading timed out')), 20000)
+    })
+    await Promise.race([element.play(), loadingLimit])
   }
   catch (error) {
     console.error('Unable to play audio', error)
-    if (request === playRequest) {
-      globalConfig.setCurrentMusic(item, true)
-    }
+    if (request === playRequest)
+      failPlayback(item, (error instanceof Error || error instanceof DOMException) && error.name === 'NotAllowedError' ? 'error.audioBlocked' : 'error.audioPlayback')
+  }
+  finally {
+    clearTimeout(timeout)
+    if (cancelPendingPlay === cancelWait)
+      cancelPendingPlay = undefined
+    if (request === playRequest)
+      loading.value = false
   }
 }
-function playMusic(item: any, skip = false) {
-  if (!item) {
+function playMusic(item: IMusic) {
+  if (!item.url) {
+    playbackError.value = 'tooltip.noSongPlay'
     return
   }
-  if (!currentMusic.value.paused && !skip) {
-    globalConfig.setCurrentMusic(item, true)
-
-    return
-  }
-  globalConfig.setCurrentMusic(item, false)
+  globalConfig.setCurrentMusic(item, !currentMusic.value.paused)
 }
 function nextPlay() {
   // 播放下一首
   if (localMusicList.value.length >= 1) {
-    let index = localMusicList.value.findIndex((item: any) => item.name === currentMusic.value.item.name)
+    let index = localMusicList.value.findIndex(item => item.id === currentMusic.value.item.id)
     index++
     if (index >= localMusicList.value.length) {
       index = 0
@@ -78,9 +93,9 @@ function nextPlay() {
     globalConfig.setCurrentMusic(localMusicList.value[index], false)
   }
 }
-// 监听播放成后开始下一首
-function onPlayEnd() {
-  audio.value.addEventListener('ended', nextPlay)
+function handleAudioError() {
+  if (!currentMusic.value.paused && !loading.value)
+    failPlayback(currentMusic.value.item, 'error.audioPlayback')
 }
 
 function enterConfig() {
@@ -112,9 +127,8 @@ function toggleFullscreen() {
 }
 
 onMounted(() => {
+  globalConfig.repairDefaultMusicUrls()
   globalConfig.setCurrentMusic(localMusicList.value[0], true)
-  onPlayEnd()
-  // 不使用空格控制audio
 
   // 监听全屏状态变化
   document.addEventListener('fullscreenchange', handleFullscreenChange)
@@ -123,28 +137,41 @@ function handleFullscreenChange() {
   isFullscreen.value = !!document.fullscreenElement
 }
 
-onUnmounted(() => {
+onBeforeUnmount(() => {
   playRequest++
-  audio.value.pause()
-  audio.value.removeAttribute('src')
-  audio.value.load()
-  audio.value.removeEventListener('ended', nextPlay)
+  cancelPendingPlay?.()
+  audio.value?.pause()
+  audio.value?.removeAttribute('src')
+  audio.value?.load()
   document.removeEventListener('fullscreenchange', handleFullscreenChange)
 })
-watch(currentMusic, (val: any) => {
+watch(currentMusic, (val) => {
   const request = ++playRequest
+  cancelPendingPlay?.()
+  cancelPendingPlay = undefined
+  playbackError.value = ''
+  loading.value = false
   if (!val.paused && audio.value) {
     void play(val.item, request)
   }
   else {
-    audio.value.pause()
+    audio.value?.pause()
   }
-}, { deep: true })
+}, { deep: true, flush: 'sync' })
 </script>
 
 <template>
+  <audio ref="audio" preload="none" @ended="nextPlay" @error="handleAudioError" />
+  <div v-if="playbackError" class="toast toast-top toast-end z-50 max-w-full" data-theme="light">
+    <div role="alert" class="alert alert-error max-w-sm">
+      <span>{{ t(playbackError) }}</span>
+      <button type="button" class="btn btn-ghost btn-xs" :aria-label="t('button.close')" @click="playbackError = ''">
+        ×
+      </button>
+    </div>
+  </div>
   <div
-    ref="settingRef" :data-theme="isConfigRoute ? 'light' : undefined" class="fixed z-30 flex gap-2"
+    :data-theme="isConfigRoute ? 'light' : undefined" class="fixed z-30 flex gap-2"
     :class="isConfigRoute ? 'bottom-20 right-4 flex-row rounded-xl border border-base-content/10 bg-base-100/90 p-1 shadow-lg md:bottom-auto md:top-5' : 'bottom-1/2 right-0 flex-col'"
   >
     <div v-if="isConfigRoute" class="tooltip tooltip-top" :data-tip="t('tooltip.toHome')">
@@ -169,10 +196,11 @@ watch(currentMusic, (val: any) => {
     <div class="tooltip" :class="isConfigRoute ? 'tooltip-top' : 'tooltip-left'" :data-tip="currentMusic.item ? `${currentMusic.item.name}\n\r ${t('tooltip.nextSong')}` : t('tooltip.noSongPlay')">
       <button
         type="button" class="btn btn-square btn-sm bg-base-100" :class="isConfigRoute ? 'rounded-lg' : 'rounded-r-none border-r-0 shadow-md'"
-        :aria-label="currentMusic.paused ? t('button.play') : t('button.pause')"
+        :aria-label="currentMusic.paused ? t('button.play') : t('button.pause')" :aria-busy="loading"
         @click="playMusic(currentMusic.item)" @click.right.prevent="nextPlay"
       >
-        <svg-icon :name="currentMusic.paused ? 'play' : 'pause'" />
+        <span v-if="loading" class="loading loading-spinner loading-xs" />
+        <svg-icon v-else :name="currentMusic.paused ? 'play' : 'pause'" />
       </button>
     </div>
 
@@ -192,13 +220,3 @@ watch(currentMusic, (val: any) => {
     </div>
   </div>
 </template>
-
-<style lang='scss' scoped>
-details {
-
-    // display: none;
-    summary {
-        display: none;
-    }
-}
-</style>

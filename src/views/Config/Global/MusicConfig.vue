@@ -9,6 +9,7 @@ import { useStorageFeedback } from '@/hooks/useStorageFeedback'
 
 import useStore from '@/store'
 import { readFileData } from '@/utils/file'
+import { isBundledMusic } from '@/utils/music'
 
 const { t } = useI18n()
 const { storageError, storageUsage, busy, run } = useStorageFeedback()
@@ -166,7 +167,7 @@ onUnmounted(() => clearTimeout(toastTimer))
               {{ item.name }}
             </p>
             <p class="mb-0 mt-1 text-xs text-base-content/50">
-              {{ item.url === 'Storage' ? t('admin.localFile') : t('admin.remoteFile') }}
+              {{ item.url === 'Storage' ? t('admin.localFile') : isBundledMusic(item.url) ? t('admin.bundledAudio') : t('admin.remoteFile') }}
             </p>
           </div>
           <div class="flex shrink-0 gap-2 self-end sm:self-auto">

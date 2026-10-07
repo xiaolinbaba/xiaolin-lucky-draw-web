@@ -63,6 +63,7 @@ export default {
     itemCount: '共 {count} 项',
     localFile: '本地文件',
     remoteFile: '远程音频',
+    bundledAudio: '内置音乐',
     current: '当前奖项',
     section: {
       basicSettings: '基础设置',
@@ -173,6 +174,9 @@ export default {
     exitFullscreen: '退出全屏',
   },
   error: {
+    audioMissing: '本机音乐文件已丢失，请在音乐管理中重新上传。',
+    audioPlayback: '音乐暂时无法播放，请重试或在音乐管理中选择其他音乐。',
+    audioBlocked: '浏览器阻止了音乐播放，请再次点击播放按钮。',
     restoreRollback: '写入失败，旧数据未能完整恢复。请保留原备份和恢复前自动下载的备份，重新加载后检查并恢复所需活动。',
     integerRange: '请输入 {min} 至 {max} 的整数，当前有效设置已保留',
     invalidDraw: '奖项人数或分批进度无效，请在奖品配置中检查',

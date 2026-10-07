@@ -2,6 +2,7 @@ import type { IImage, IMusic } from '@/types/storeType'
 import { defineStore } from 'pinia'
 import { DEFAULT_TOP_TITLE } from '@/constants/app'
 import i18n, { browserLanguage, type Language } from '@/locales/i18n'
+import { resolveMusicUrl } from '@/utils/music'
 import { safeConfigStorage } from '@/utils/persistence'
 import { defaultImageList, defaultMusicList, defaultPatternList } from './data'
 // import { IPrizeConfig } from '@/types/storeType';
@@ -192,6 +193,10 @@ export const useGlobalConfig = defineStore('global', {
         item: musicItem ?? { id: '', name: '', url: '' },
         paused,
       }
+    },
+    repairDefaultMusicUrls() {
+      for (const track of this.globalConfig.musicList)
+        track.url = resolveMusicUrl(track.url)
     },
     // 重置音乐列表
     resetMusicList() {
