@@ -53,7 +53,7 @@ export default {
     next: 'Next',
     musicVolume: 'Volume',
     addLocalMusic: 'Add music',
-    musicLocalHint: 'Added music stays in this browser and is never uploaded to Cloudflare.',
+    musicLocalHint: 'Added music stays in this browser.',
     musicResetHint: 'After clearing the playlist, Reset restores the 11 built-in tracks. Reset also removes music you added.',
     backup: 'Backup and restore',
     backupDescription: 'Backups include people, winning history, prizes, appearance and uploaded images and music. Restoring replaces the current event and downloads a copy first. Maximum backup size: 200 MB.',

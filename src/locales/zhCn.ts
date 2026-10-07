@@ -53,7 +53,7 @@ export default {
     next: '下一页',
     musicVolume: '音量',
     addLocalMusic: '添加音乐',
-    musicLocalHint: '添加的音乐仅保存在当前浏览器，不会上传到 Cloudflare。',
+    musicLocalHint: '添加的音乐仅保存在当前浏览器。',
     musicResetHint: '清空歌单后，可点击“重置”恢复内置 11 首音乐；重置会移除自行添加的音乐。',
     backup: '备份与恢复',
     backupDescription: '备份包含名单、中奖历史、奖项、界面配置及上传的图片和音乐。恢复会覆盖当前活动，恢复前会自动下载当前备份。备份文件上限 200 MB。',

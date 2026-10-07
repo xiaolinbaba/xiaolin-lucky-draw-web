@@ -7,7 +7,7 @@ const { t } = useI18n()
 
 <template>
   <div class="config-page">
-    <div class="grid min-w-0 gap-4 lg:grid-cols-2">
+    <div class="grid min-w-0 grid-cols-1 gap-4">
       <section class="config-section">
         <header class="config-section-header">
           <h2 class="config-section-title">
