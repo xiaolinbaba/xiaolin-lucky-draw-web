@@ -41,12 +41,12 @@ const { t } = useI18n()
           <img
             :src="donationQr" :alt="t('support.qrAlt')"
             width="828" height="1124"
-            class="mx-auto block h-auto w-full max-w-[280px] rounded-lg"
+            class="block h-auto w-full max-w-[280px] rounded-lg"
           >
-          <p class="m-0 text-center text-xs leading-6 text-base-content/60">
+          <p class="m-0 text-xs leading-6 text-base-content/60">
             {{ t('support.scanHint') }}
           </p>
-          <p class="m-0 text-center text-sm text-base-content/75">
+          <p class="m-0 text-sm text-base-content/75">
             {{ t('support.thanks') }}
           </p>
         </div>
